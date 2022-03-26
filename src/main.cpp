@@ -1,4 +1,11 @@
-#include "Settings.h"
+#include "Logger.h"
+#include "Types.h"
+#include "SettingsParser.h"
+#include "Dependencies.h"
+#include "Parser.h"
+
+using namespace Hansel;
+
 
 /** The Hansel tool is designed to be used in three possible ways:
 
@@ -25,27 +32,39 @@
 */
 
 
-// DEV NOTE: the way of specifying the destination path must take into accout
-// both the case when a project/library is installed by itself and when it is built
-// as a dependency of another project/library
+// DEV NOTE: destination paths specified by dependencies must be relative to the base target's install path
 
 
 int main(int argc, char* argv[])
 {
+    Logger::Init();
+
     // Usage example:
     //  hansel.exe ./application.hbc win64d --env PLATFORM_DIR=win64d HW_ROOTDIR=./hw --verbose
 
     Settings settings;
     try
     {
-        settings.ParseCommandLine(argc, argv);
+        settings = SettingsParser::ParseCommandLine(argc, argv);
     }
     catch (std::exception e)
     {
-        std::cerr << "ERROR: " << e.what() << '\n'
-            << "Usage: " << argv[0] << " TO BE DEFINED "                     // Required parameters
-            << "[-e / --env <variable-definitions...>] [-v / --verbose]"     // Optional parameters
-            << std::endl;;
+        Logger::Error("{}\n"
+            "Usage: {} TO BE DEFINED"                                           // Required parameters
+            "[-e / --env <variable-definitions...>] [-v / --verbose]\n",        // Optional parameters
+            e.what(), argv[0]);
+
+        return -1;
+    }
+
+    std::vector<Dependency*> dependencies;
+    try
+    {
+        dependencies = Parser::ParseBreadcrumb(settings.target, settings);
+    }
+    catch (std::exception e)
+    {
+        Logger::Error("{}", e.what());
 
         return -1;
     }
