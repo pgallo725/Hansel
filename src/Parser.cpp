@@ -103,7 +103,7 @@ namespace Hansel
 
         if (dependencies.empty())
         {
-            // LOG: message to tell the user that the breadcrumb file didn't contain any dependency
+            Logger::Info("The breadcrumb file '{}' did not contain any dependency", path_to_breadcrumb);
         }
 
         return dependencies;
@@ -126,7 +126,11 @@ namespace Hansel
         {
             project_root_paths = Utilities::SplitString(project_path_attribute.value(), ';');
             for (size_t i = 0; i < project_root_paths.size(); i++)
+            {
                 project_root_paths[i] = Utilities::TrimString(project_root_paths[i]);
+                if (project_root_paths[i].starts_with('.'))
+                    project_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), project_root_paths[i]);
+            }
         }
 
         std::vector<std::string> library_root_paths;
@@ -134,7 +138,11 @@ namespace Hansel
         {
             library_root_paths = Utilities::SplitString(library_path_attribute.value(), ';');
             for (size_t i = 0; i < library_root_paths.size(); i++)
+            {
                 library_root_paths[i] = Utilities::TrimString(library_root_paths[i]);
+                if (library_root_paths[i].starts_with('.'))
+                    library_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), library_root_paths[i]);
+            }
         }
 
         std::vector<std::string> command_root_paths;
@@ -142,7 +150,11 @@ namespace Hansel
         {
             command_root_paths = Utilities::SplitString(command_path_attribute.value(), ';');
             for (size_t i = 0; i < command_root_paths.size(); i++)
+            {
                 command_root_paths[i] = Utilities::TrimString(command_root_paths[i]);
+                if (command_root_paths[i].starts_with('.'))
+                    command_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), command_root_paths[i]);
+            }
         }
 
 
@@ -212,7 +224,6 @@ namespace Hansel
         }
         else
         {
-            // TODO: add documentation for project path resolution rules
             const std::optional<Path> resolved_path = Utilities::ResolvePath(name.value(), project_root_paths);
             if (!resolved_path.has_value())
                 throw std::exception(("couldn't resolve '" + name.value() + "' project directory").c_str());
@@ -263,7 +274,6 @@ namespace Hansel
         }
         else
         {
-            // TODO: add documentation for library path resolution rules
             const std::optional<Path> resolved_path = Utilities::ResolvePath(name.value() + "/" + version.value().ToString(), library_root_paths);
             if (!resolved_path.has_value())
                 throw std::exception(("couldn't resolve '" + name.value() + "(" + version.value().ToString() + ")' library directory").c_str());
@@ -370,7 +380,6 @@ namespace Hansel
         }
         else
         {
-            // TODO: add documentation for command path resolution rules
             const std::optional<Path> resolved_path = Utilities::ResolvePath(name.value(), command_root_paths);
             if (!resolved_path.has_value())
                 throw std::exception(("couldn't resolve '" + name.value() + "' command path").c_str());
@@ -389,7 +398,7 @@ namespace Hansel
 
     void Parser::ProcessChildrenRestrictNodes(tinyxml2::XMLNode* root, const Settings& settings)
     {
-        if (!root)
+        if (!root || root->NoChildren())
             return;
 
         // Iterate over all children nodes to find <Restrict> elements
@@ -405,7 +414,8 @@ namespace Hansel
                 {
                     if (element->NoChildren())
                     {
-                        // LOG: warning to tell the user that this <Restrict> node is empty
+                        Logger::Warn("The <Restrict> node at {} (line {}) has no children and will be skipped",
+                            settings.GetTargetBreadcrumbFilename(), element->GetLineNum());
                     }
                     else
                     {
@@ -425,8 +435,12 @@ namespace Hansel
                             node->DeleteChildren();
                         }
 
+                        tinyxml2::XMLNode* prev = node->PreviousSibling();
+
                         // Remove the <Restrict> node after it has been evaluated
                         node->Parent()->DeleteChild(node);
+
+                        node = prev;
                     }
                 }
                 else
@@ -443,13 +457,12 @@ namespace Hansel
     /* Utility function used to parse OR'd combinations of flags for the 
         'Platform', 'Architecture' and 'Configuration' restrict attributes
     */
-    // TODO: restrict template supported types to just enums
-    template<typename T>
-    static T ParsePlatformSpecifierFlags(const std::string& str, const std::map<std::string, T>& mapping)
+    template<Enum T>
+    static T ParsePlatformSpecifierFlags(const std::string& field_name, const std::string& field_value, const std::map<std::string, T>& mapping)
     {
         T result = T(0);
 
-        std::vector<std::string> strings = Utilities::SplitString(str, '|');
+        std::vector<std::string> strings = Utilities::SplitString(field_value, '|');
         for (std::string& str : strings)
         {
             // Remove possible variations by trimming whitespaces and lowering the string
@@ -469,7 +482,7 @@ namespace Hansel
             }
             else
             {
-                throw std::exception(("'" + str + "' is not a valid platform flag").c_str());
+                throw std::exception(("'" + str + "' is not a valid <" + field_name + "> flag").c_str());
             }
         }
 
@@ -492,6 +505,7 @@ namespace Hansel
 
         Platform::OperatingSystem os_mask = ParsePlatformSpecifierFlags<Platform::OperatingSystem>
         (
+            "Platform",
             platform_attribute.value(),
             StringToOperatingSystemMapping
         );
@@ -503,6 +517,7 @@ namespace Hansel
 
         Platform::Architecture arch_mask = ParsePlatformSpecifierFlags<Platform::Architecture>
         (
+            "Architecture",
             architecture_attribute.value(),
             StringToArchitectureMapping
         );
@@ -514,12 +529,12 @@ namespace Hansel
 
         Platform::Configuration config_mask = ParsePlatformSpecifierFlags<Platform::Configuration>
         (
+            "Configuration",
             configuration_attribute.value(),
             StringToConfigurationMapping
         );
 
         // Compare the restrict flags against the global platform specifier to check if it matches
-        // TODO(?): maybe parsing and evaluation should be handled by separate functions
         if ((uint16_t(settings.platform.os) & uint16_t(os_mask)) != 0) return true;
         if ((uint16_t(settings.platform.arch) & uint16_t(arch_mask)) != 0) return true;
         if ((uint16_t(settings.platform.config) & uint16_t(config_mask)) != 0) return true;
@@ -561,7 +576,7 @@ namespace Hansel
 
                 // Find variable in map and get its value
                 const auto it = environment.find(variable_name);
-                if (it != environment.end())
+                if (it == environment.end())
                     throw std::exception(("cannot substitute $(" + variable_name + "), variable not defined").c_str());
                 const std::string& variable_value = it->second;
 
@@ -571,7 +586,7 @@ namespace Hansel
             }
             else
             {
-                // TODO: empty variable placeholder '$()', warn the user in verbose mode
+                Logger::Warn("Empty variable placeholder '$()', skipping substitution");
             }
         }
 
@@ -585,9 +600,16 @@ namespace Hansel
         if (!path_string.has_value())
             return std::optional<Path>(std::nullopt);
 
-        // TODO: check path format correctness
-
-        return Path(path_string.value());
+        try // validate path and throw exception if not valid
+        {
+            const std::filesystem::path path(path_string.value());
+            return Path(path.lexically_normal().string());
+        }
+        catch (std::exception)
+        {
+            const std::string error = "\'" + path_string.value() + "\' is not a valid path";
+            return std::optional<Path>(std::nullopt);
+        }
     }
 
     std::optional<Version> Parser::GetAttributeAsVersion(const tinyxml2::XMLElement* element, const char* attribute)

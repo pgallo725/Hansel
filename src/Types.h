@@ -1,6 +1,7 @@
 #pragma once
 
 #include <compare>
+#include <concepts>
 #include <exception>
 #include <filesystem>
 #include <map>
@@ -16,6 +17,9 @@ namespace Hansel
     using String = std::string;
     using Path = std::string;
     using Environment = std::map<std::string, std::string>;
+
+    template<class E>
+    concept Enum = std::is_enum<E>::value;
 
 
     struct Platform
@@ -83,6 +87,12 @@ namespace Hansel
         Platform platform;
         Environment variables;
         bool verbose = false;
+
+        inline String GetTargetBreadcrumbFilename() const
+        {
+            const std::filesystem::path target_file_path = std::filesystem::canonical(target);
+            return target_file_path.filename().string();
+        }
 
         inline Path GetTargetDirectoryPath() const
         {
