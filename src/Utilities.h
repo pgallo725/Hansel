@@ -14,7 +14,7 @@ namespace Hansel
         static std::string LowerString(const std::string& str)
         {
             std::string str_lower;
-            std::transform(str.begin(), str.end(), str_lower.begin(),
+            std::transform(str.begin(), str.end(), std::back_inserter(str_lower),
                 [](unsigned char c) { return std::tolower(c); });
 
             return str_lower;
@@ -24,7 +24,7 @@ namespace Hansel
         static std::string UpperString(const std::string& str)
         {
             std::string str_upper;
-            std::transform(str.begin(), str.end(), str_upper.begin(),
+            std::transform(str.begin(), str.end(), std::back_inserter(str_upper),
                 [](unsigned char c) { return std::toupper(c); });
 
             return str_upper;
@@ -40,14 +40,14 @@ namespace Hansel
                 [](char c) {
                     return !std::isspace<char>(c, std::locale::classic());
                 });
-            str_copy.erase(str.begin(), first_nonspace_pos);
+            str_copy.erase(str_copy.begin(), first_nonspace_pos);
 
             // Remove trailing whitespaces
             auto last_nonspace_pos = std::find_if(str_copy.rbegin(), str_copy.rend(),
                 [](char c) {
                     return !std::isspace<char>(c, std::locale::classic());
                 });
-            str_copy.erase(last_nonspace_pos.base(), str.end());
+            str_copy.erase(last_nonspace_pos.base(), str_copy.end());
 
             return str_copy;
         }
@@ -85,8 +85,7 @@ namespace Hansel
             std::filesystem::path path = std::filesystem::path(trimmed_left_path) / std::filesystem::path(trimmed_right_path);
 
             // Canonicalize path
-            path = std::filesystem::canonical(path);
-            return path.string();
+            return path.lexically_normal().string();
         }
 
         /* TODO: DOCUMENTATION */
