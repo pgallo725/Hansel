@@ -84,11 +84,9 @@ namespace Hansel
         Environment variables;
         bool verbose = false;
 
-        // TODO(?): should the target directory and the breadcrumb filename be
-        // passed separately in the command line to avoid this ? (probably not)
         inline Path GetTargetDirectoryPath() const
         {
-            const std::filesystem::path target_file_path(target);
+            const std::filesystem::path target_file_path = std::filesystem::canonical(target);
             return target_file_path.parent_path().string();
         }
     };
@@ -96,6 +94,8 @@ namespace Hansel
 
     struct Version
     {
+        static constexpr auto NoValue{ static_cast<uint32_t>(-1) };
+
         uint32_t major = 0;
         uint32_t minor = 0;
         uint32_t patch = 0;
@@ -108,9 +108,8 @@ namespace Hansel
         {}
 
         Version(uint32_t major, uint32_t minor)
-            : Version(major, minor, 0)
+            : Version(major, minor, NoValue)
         {}
-
 
         std::strong_ordering operator<=>(const Version& other)
         {
@@ -124,7 +123,17 @@ namespace Hansel
             else if (minor < other.minor)
                 return std::strong_ordering::less;
 
-            if (patch > other.patch)
+            if (patch == other.patch)
+                return std::strong_ordering::equal;
+            else if (patch == NoValue)
+                if (other.patch == 0)
+                    return std::strong_ordering::equivalent;
+                else return std::strong_ordering::less;
+            else if (other.patch == NoValue)
+                if (other.patch == 0)
+                    return std::strong_ordering::equivalent;
+                else return std::strong_ordering::greater;
+            else if (patch > other.patch)
                 return std::strong_ordering::greater;
             else if (patch < other.patch)
                 return std::strong_ordering::less;
@@ -135,13 +144,13 @@ namespace Hansel
         bool operator==(const Version& other) const = default;
         bool operator!=(const Version& other) const = default;
 
-
         std::string ToString() const
         {
             std::stringstream stream;
 
-            // TODO: exclude the 'patch' number if it was left unspecified
-            stream << major << '.' << minor << '.' << patch;
+            if (patch == NoValue) // exclude the 'patch' number if it was left unspecified
+                stream << major << '.' << minor;
+            else stream << major << '.' << minor << '.' << patch;
 
             return stream.str();
         }
