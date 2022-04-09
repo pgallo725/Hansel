@@ -34,6 +34,10 @@ using namespace Hansel;
 
 // DEV NOTE: destination paths specified by dependencies must be relative to the base target's install path
 
+void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
+void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
+void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
+
 
 int main(int argc, char* argv[])
 {
@@ -69,5 +73,41 @@ int main(int argc, char* argv[])
         return -1;
     }
 
+    // TEST
+    PrintDependencies(dependencies, settings);
+
     return 0;
+}
+
+
+
+void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
+{
+    // TODO
+}
+
+void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
+{
+    // TODO
+}
+
+void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
+{
+    std::printf("\n%s\n", settings.GetTargetBreadcrumbFilename().c_str());
+
+    if (dependencies.size() > 0)
+    {
+        const std::string prefix = "  |";
+        for (size_t i = 0; i < dependencies.size(); i++)
+        {
+            std::printf(prefix.c_str());	//empty line for spacing
+            std::printf("\n");
+
+            dependencies[i]->Print(prefix);
+        }
+    }
+    else
+    {
+        std::printf("\n  NO DEPENDENCIES\n");
+    }
 }

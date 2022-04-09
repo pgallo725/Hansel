@@ -19,9 +19,9 @@ namespace Hansel
             Command
         };
 
-        virtual bool Realize() const = 0;
+        virtual bool Realize() const = 0;   // TODO
         // TODO: Add Check() function for --check mode (verify correctness and highlight issues)
-        // TODO: Add Print() function for --list mode (visualize dependency tree)
+        virtual void Print(const std::string& prefix) const = 0;
 
     protected:
 
@@ -51,6 +51,7 @@ namespace Hansel
         {};
 
         bool Realize() const override;
+        void Print(const std::string& prefix) const override;
     };
 
 
@@ -73,6 +74,7 @@ namespace Hansel
         {};
 
         bool Realize() const override;
+        void Print(const std::string& prefix) const override;
     };
 
 
@@ -91,6 +93,7 @@ namespace Hansel
         {};
 
         bool Realize() const override;
+        void Print(const std::string& prefix) const override;
     };
 
 
@@ -109,6 +112,7 @@ namespace Hansel
         {};
 
         bool Realize() const override;
+        void Print(const std::string& prefix) const override;
     };
 
 
@@ -127,6 +131,7 @@ namespace Hansel
         {};
 
         bool Realize() const override;
+        void Print(const std::string& prefix) const override;
     };
 
 
@@ -146,5 +151,6 @@ namespace Hansel
         {};
 
         bool Realize() const override;
+        void Print(const std::string& prefix) const override;
     };
 }
