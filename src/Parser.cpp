@@ -572,7 +572,7 @@ namespace Hansel
             if (match_length > 3)
             {
                 // Get variable name
-                const std::string& variable_name = attribute_value.substr(match_position + 2, match_length - 3);
+                const std::string& variable_name = Utilities::UpperString(attribute_value.substr(match_position + 2, match_length - 3));
 
                 // Find variable in map and get its value
                 const auto it = environment.find(variable_name);

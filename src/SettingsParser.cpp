@@ -1,5 +1,6 @@
 #include "SettingsParser.h"
 #include "Logger.h"
+#include "Utilities.h"
 
 #include <set>
 
@@ -107,6 +108,17 @@ namespace Hansel
 
                     settings.variables.insert(variable_pair);
                 }
+
+                // Define special PLATFORM_DIR and OUTPUT_DIR environment variables
+                const std::string platform_dir_value = "win64d";    // TEMPORARY
+                if (settings.variables.contains("PLATFORM_DIR"))
+                    Logger::Warn("PLATFORM_DIR is a reserved variable, the provided value will be replaced by '{}'",
+                        platform_dir_value);
+                if (settings.variables.contains("OUTPUT_DIR"))
+                    Logger::Warn("OUTPUT_DIR is a reserved variable, the provided value will be replaced by '{}'",
+                        settings.output);
+                settings.variables["PLATFORM_DIR"] = platform_dir_value;
+                settings.variables["OUTPUT_DIR"] = settings.output;
             }
             else
             {
@@ -127,9 +139,16 @@ namespace Hansel
     {
         const std::string value_str = ReadStringParam(argv, index, name);
 
-        // TODO: validate path and throw exception if not valid
-
-        return value_str;
+        try // validate path and throw exception if not valid
+        {
+            const std::filesystem::path value_path(value_str);
+            return value_path.lexically_normal().string();
+        }
+        catch (std::exception)
+        {
+            const std::string error = "\'" + value_str + "\' is not a valid \'" + name + "\' path";
+            throw std::exception(error.c_str());
+        }
     }
 
     uint32_t SettingsParser::ReadUInt32Param(const char* const argv[], const int index, const std::string& name)
@@ -143,7 +162,7 @@ namespace Hansel
 
             return uint32_t(value_int);
         }
-        catch (std::exception e)
+        catch (std::exception)
         {
             const std::string error = "\'" + value_str + "\' is not a valid value for \'" + name + '\'';
             throw std::exception(error.c_str());
@@ -193,7 +212,7 @@ namespace Hansel
 
         // Parse NAME=VALUE into std::pair and return
         const size_t splitpos = variable_str.find('=');
-        const std::string variable_name = variable_str.substr(0, splitpos);
+        const std::string variable_name = Utilities::UpperString(variable_str.substr(0, splitpos));
         const std::string variable_value = variable_str.substr(splitpos + 1, variable_str.length());
         return { variable_name, variable_value };
     }
