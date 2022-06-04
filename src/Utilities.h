@@ -10,7 +10,8 @@ namespace Hansel
 {
 	namespace Utilities
 	{
-        /* TODO: DOCUMENTATION */
+        /* Returns a copy of the provided string, with all alphabetic characters
+            converted to their lowercase form. */
         static std::string LowerString(const std::string& str)
         {
             std::string str_lower;
@@ -20,7 +21,8 @@ namespace Hansel
             return str_lower;
         }
 
-        /* TODO: DOCUMENTATION */
+        /* Returns a copy of the provided string, with all alphabetic characters
+            converted to their uppercase form.  */
         static std::string UpperString(const std::string& str)
         {
             std::string str_upper;
@@ -30,7 +32,8 @@ namespace Hansel
             return str_upper;
         }
 
-        /* TODO: DOCUMENTATION */
+        /* Returns a copy of the provided string, with all leading and trailing
+            whitespaces removed. */
         static std::string TrimString(const std::string& str)
         {
             std::string str_copy = str;
@@ -52,7 +55,9 @@ namespace Hansel
             return str_copy;
         }
 
-        /* TODO: DOCUMENTATION */
+        /* Returns an array of sub-strings, obtained by splitting the provided
+            string at every occurrence of the <delimiter> character.
+           The delimiter is not included in the sub-strings. */
         static std::vector<std::string> SplitString(const std::string& str, const char delimiter = ' ')
         {
             std::vector<std::string> strings;
@@ -68,7 +73,9 @@ namespace Hansel
         }
 
 
-        /* TODO: DOCUMENTATION */
+        /* Returns a path obtained by concatenating the provided paths with a '/',
+            after trimming them and removing additional '/' characters. 
+           The resulting path is normalized according to std::path::lexically_normal(). */
         static Path CombinePath(const Path& left, const Path& right)
         {
             // Trim left path and strip trailing '/'
@@ -88,7 +95,10 @@ namespace Hansel
             return path.lexically_normal().string();
         }
 
-        /* TODO: DOCUMENTATION */
+        /* Combines the given relative path with the list of provided roots, and returns
+            the first path (if any) that matches an actually existing filesystem path. 
+           Root paths are tried in the same order that they are specified in the 'root_paths'
+            vector, which therefore determines the lookup priority. */
         static std::optional<Path> ResolvePath(const Path& relative_path, const std::vector<Path>& root_paths)
         {
             // Attempt all provided root paths, returning the first match with an existing filesystem path
