@@ -3,7 +3,12 @@
 #include "Types.h"
 #include "Dependencies.h"
 
-#include <tinyxml2/tinyxml2.h>  // TODO(?): move to .cpp file only (maybe forward declare tinyxml2 types)
+// Forward declaration of tinyxml2 types
+namespace tinyxml2
+{
+    class XMLElement;
+    class XMLNode;
+};
 
 
 namespace Hansel

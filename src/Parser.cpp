@@ -2,6 +2,8 @@
 #include "Logger.h"
 #include "Utilities.h"
 
+#include <tinyxml2/tinyxml2.h>
+
 
 namespace Hansel
 {
