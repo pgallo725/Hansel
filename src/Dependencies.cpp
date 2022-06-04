@@ -33,7 +33,7 @@ bool Hansel::ProjectDependency::Realize() const
 
 void Hansel::ProjectDependency::Print(const std::string& prefix) const
 {
-	Print_Internal(prefix, "PROJECT", path, &dependencies);
+	Print_Internal(prefix, "PROJECT", name, &dependencies);
 }
 
 
@@ -44,7 +44,8 @@ bool Hansel::LibraryDependency::Realize() const
 
 void Hansel::LibraryDependency::Print(const std::string& prefix) const
 {
-	Print_Internal(prefix, "LIBRARY", path, &dependencies);
+	const std::string name_version_str = name + " " + version.ToString();
+	Print_Internal(prefix, "LIBRARY", name_version_str, &dependencies);
 }
 
 

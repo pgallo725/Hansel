@@ -311,9 +311,14 @@ namespace Hansel
         if (!destination.has_value())
             throw std::exception("invalid <File> node (missing 'Destination' attribute)");
 
+        // Extract the "full" path to the dependency file
+        // TODO: just combining these paths is probably not enough: need to handle the case where it may be 
+        // an absolute path instead of a relative one, and other correctness checks
+        const Path complete_file_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
+
         return new FileDependency
         (
-            path.value(),
+            complete_file_path,
             destination.value()
         );
     }
@@ -329,9 +334,14 @@ namespace Hansel
         if (!destination.has_value())
             throw std::exception("invalid <Files> node (missing 'Destination' attribute)");
 
+        // Extract the "full" path to the dependency files
+        // TODO: just combining these paths is probably not enough: need to handle the case where it may be 
+        // an absolute path instead of a relative one, and other correctness checks
+        const Path complete_files_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
+
         return new FilesDependency
         (
-            path.value(),
+            complete_files_path,
             destination.value()
         );
     }
@@ -347,9 +357,14 @@ namespace Hansel
         if (!destination.has_value())
             throw std::exception("invalid <Directory> node (missing 'Destination' attribute)");
 
+        // Extract the "full" path to the dependency directory
+        // TODO: just combining these paths is probably not enough: need to handle the case where it may be 
+        // an absolute path instead of a relative one, and other correctness checks
+        const Path complete_directory_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
+
         return new DirectoryDependency
         (
-            path.value(),
+            complete_directory_path,
             destination.value()
         );
     }
