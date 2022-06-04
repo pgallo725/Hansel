@@ -121,8 +121,6 @@ namespace Hansel
         std::optional<std::string> library_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "LibraryPath", settings.variables);
         std::optional<std::string> command_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "CommandPath", settings.variables);
 
-        // TODO(?): automatically add the current target directory to the root paths ?
-
         std::vector<std::string> project_root_paths;
         if (project_path_attribute.has_value())
         {
@@ -134,6 +132,8 @@ namespace Hansel
                     project_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), project_root_paths[i]);
             }
         }
+        // Append the current target directory path as the last (lower priority) project lookup path
+        project_root_paths.push_back(settings.GetTargetDirectoryPath());
 
         std::vector<std::string> library_root_paths;
         if (library_path_attribute.has_value())
@@ -146,6 +146,8 @@ namespace Hansel
                     library_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), library_root_paths[i]);
             }
         }
+        // Append the current target directory path as the last (lower priority) library lookup path
+        library_root_paths.push_back(settings.GetTargetDirectoryPath());
 
         std::vector<std::string> command_root_paths;
         if (command_path_attribute.has_value())
@@ -158,6 +160,8 @@ namespace Hansel
                     command_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), command_root_paths[i]);
             }
         }
+        // Append the current target directory path as the last (lower priority) command lookup path
+        command_root_paths.push_back(settings.GetTargetDirectoryPath());
 
 
         // Iterate over all <Dependencies> children elements and parse them accordingly
