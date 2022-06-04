@@ -9,7 +9,7 @@ namespace Hansel
 
 	void Logger::Init()
 	{
-		spdlog::set_pattern("%^[%T] %n: %v%$");
+		spdlog::set_pattern("%^%v%$");
 		spdlog::set_level(HANSEL_LOG_LEVEL);
 
 		s_HanselLogger = spdlog::stdout_color_mt("HANSEL");
