@@ -485,7 +485,7 @@ namespace Hansel
     {
         T result = T(0);
 
-        const std::vector<std::string> strings = Utilities::SplitString(field_value, '|');
+        std::vector<std::string> strings = Utilities::SplitString(field_value, '|');
         for (std::string& str : strings)
         {
             // Remove possible variations by trimming whitespaces and lowering the string

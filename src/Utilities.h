@@ -2,6 +2,8 @@
 
 #include "Types.h"
 
+#include "glob/glob.hpp"
+
 #include <algorithm>
 #include <cctype>
 
@@ -108,7 +110,24 @@ namespace Hansel
                 if (std::filesystem::exists(combined_path))
                     return combined_path;
             }
-            return std::optional<Path>(std::nullopt);;
+            return std::optional<Path>(std::nullopt);
+        }
+
+        // TODO: documentation
+        static std::error_code CopyDirectory(const Path& from, const Path& to)
+        {
+            const std::filesystem::copy_options options =
+                std::filesystem::copy_options::overwrite_existing |
+                std::filesystem::copy_options::recursive;
+
+            // Make sure that the target path exists before copying to it
+            std::error_code err;
+            std::filesystem::create_directories(std::filesystem::path(to), err);
+            if (err.value() != 0)
+                return err;
+
+            std::filesystem::copy(std::filesystem::path(from), std::filesystem::path(to), options, err);
+            return err;
         }
 
         // TODO: documentation
@@ -128,19 +147,37 @@ namespace Hansel
         }
 
         // TODO: documentation
-        static std::error_code CopyDirectory(const Path& from, const Path& to)
+        static std::error_code CopyMultipleFiles(const String& from_pattern, const Path& to)
         {
-            const std::filesystem::copy_options options = 
-                std::filesystem::copy_options::overwrite_existing | 
-                std::filesystem::copy_options::recursive;
-
             // Make sure that the target path exists before copying to it
             std::error_code err;
             std::filesystem::create_directories(std::filesystem::path(to), err);
             if (err.value() != 0)
                 return err;
 
-            std::filesystem::copy(std::filesystem::path(from), std::filesystem::path(to), options, err);
+            const std::filesystem::path from_directory = std::filesystem::path(from_pattern).parent_path();
+            const std::string glob_pattern = std::filesystem::path(from_pattern).filename().string();
+
+            for (auto const& dir_entry : std::filesystem::directory_iterator{ from_directory })
+            {
+                if (glob::fnmatch_case(dir_entry.path(), glob_pattern))
+                {
+                    if (dir_entry.is_regular_file())
+                    {
+                        const std::filesystem::path& file_path = dir_entry.path();
+                        err = CopySingleFile(file_path.string(), to);
+                    }
+                    else if (dir_entry.is_directory())
+                    {
+                        const std::filesystem::path& directory_path = dir_entry.path();
+                        const std::filesystem::path& to_directory_path = std::filesystem::path(to) / dir_entry.path().filename();
+                        err = CopyDirectory(dir_entry.path().string(), to_directory_path.string());
+                    }
+                    if (err.value() != 0)
+                        return err;
+                }
+            }
+
             return err;
         }
 	}

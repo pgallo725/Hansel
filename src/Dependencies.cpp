@@ -73,7 +73,12 @@ void Hansel::FileDependency::Print(const std::string& prefix) const
 
 bool Hansel::FilesDependency::Realize() const
 {
-	// TODO: implement
+	const std::error_code err = Utilities::CopyMultipleFiles(path, destination);
+	if (err.value() != 0)
+	{
+		Logger::Error(err.message());
+		return false;
+	}
 	return true;
 }
 

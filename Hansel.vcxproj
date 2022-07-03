@@ -161,6 +161,7 @@
     <ClInclude Include="src\SettingsParser.h" />
     <ClInclude Include="src\Types.h" />
     <ClInclude Include="src\Utilities.h" />
+    <ClInclude Include="vendor\glob\glob.hpp" />
     <ClInclude Include="vendor\tinyxml2\tinyxml2.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -12,6 +12,9 @@
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
       <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
     </Filter>
+    <Filter Include="glob">
+      <UniqueIdentifier>{a662fe37-0bd2-4bc2-8e29-06ee7350d703}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\main.cpp">
@@ -54,6 +57,9 @@
     </ClInclude>
     <ClInclude Include="vendor\tinyxml2\tinyxml2.h">
       <Filter>tinyxml2</Filter>
+    </ClInclude>
+    <ClInclude Include="vendor\glob\glob.hpp">
+      <Filter>glob</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
