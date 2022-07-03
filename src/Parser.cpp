@@ -226,7 +226,7 @@ namespace Hansel
         Path project_directory_path;
         if (path.has_value())
         {
-            project_directory_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
+            project_directory_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
         }
         else
         {
@@ -277,7 +277,7 @@ namespace Hansel
         Path library_directory_path;
         if (path.has_value())
         {
-            library_directory_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
+            library_directory_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
         }
         else
         {
@@ -320,9 +320,7 @@ namespace Hansel
             throw std::exception("invalid <File> node (missing 'Destination' attribute)");
 
         // Extract the "full" path to the dependency file
-        // TODO: just combining these paths is probably not enough: need to handle the case where it may be 
-        // an absolute path instead of a relative one, and other correctness checks
-        const Path complete_file_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
+        const Path complete_file_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
 
         return new FileDependency
         (
@@ -343,9 +341,7 @@ namespace Hansel
             throw std::exception("invalid <Files> node (missing 'Destination' attribute)");
 
         // Extract the "full" path to the dependency files
-        // TODO: just combining these paths is probably not enough: need to handle the case where it may be 
-        // an absolute path instead of a relative one, and other correctness checks
-        const Path complete_files_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
+        const Path complete_files_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
 
         return new FilesDependency
         (
@@ -366,9 +362,7 @@ namespace Hansel
             throw std::exception("invalid <Directory> node (missing 'Destination' attribute)");
 
         // Extract the "full" path to the dependency directory
-        // TODO: just combining these paths is probably not enough: need to handle the case where it may be 
-        // an absolute path instead of a relative one, and other correctness checks
-        const Path complete_directory_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
+        const Path complete_directory_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
 
         return new DirectoryDependency
         (
@@ -651,7 +645,7 @@ namespace Hansel
 
         const std::string version_str = Utilities::TrimString(version_attribute.value());
         if (!std::regex_match(version_str, version_regex))
-            throw std::exception("version number does not match the MAJOR.MINOR[.PATCH] format");   // TODO: maybe should return null ? (unsure)
+            throw std::exception("version number does not match the MAJOR.MINOR[.PATCH] format");   // TODO: maybe should return null ?
 
         const std::vector<std::string> version_number_components = Utilities::SplitString(version_str, '.');
 

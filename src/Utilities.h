@@ -114,6 +114,16 @@ namespace Hansel
         }
 
         // TODO: documentation
+        static Path MakeAbsolutePath(const Path& path, const Path& root)
+        {
+            const std::filesystem::path original_path(TrimString(path));
+            return original_path.is_absolute() ?
+                original_path.lexically_normal().string() :
+                CombinePath(root, path);
+        }
+
+
+        // TODO: documentation
         static std::error_code CopyDirectory(const Path& from, const Path& to)
         {
             const std::filesystem::copy_options options =
