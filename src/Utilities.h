@@ -110,5 +110,38 @@ namespace Hansel
             }
             return std::optional<Path>(std::nullopt);;
         }
+
+        // TODO: documentation
+        static std::error_code CopySingleFile(const Path& from, const Path& to)
+        {
+            const std::filesystem::copy_options options =
+                std::filesystem::copy_options::overwrite_existing;
+
+            // Make sure that the target path exists before copying to it
+            std::error_code err;
+            std::filesystem::create_directories(std::filesystem::path(to), err);
+            if (err.value() != 0)
+                return err;
+
+            std::filesystem::copy(std::filesystem::path(from), std::filesystem::path(to), options, err);
+            return err;
+        }
+
+        // TODO: documentation
+        static std::error_code CopyDirectory(const Path& from, const Path& to)
+        {
+            const std::filesystem::copy_options options = 
+                std::filesystem::copy_options::overwrite_existing | 
+                std::filesystem::copy_options::recursive;
+
+            // Make sure that the target path exists before copying to it
+            std::error_code err;
+            std::filesystem::create_directories(std::filesystem::path(to), err);
+            if (err.value() != 0)
+                return err;
+
+            std::filesystem::copy(std::filesystem::path(from), std::filesystem::path(to), options, err);
+            return err;
+        }
 	}
 }

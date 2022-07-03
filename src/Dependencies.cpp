@@ -1,7 +1,7 @@
 #include "Dependencies.h"
 #include "Logger.h"
+#include "Utilities.h"
 
-#include <iostream>
 
 static void Print_Internal(const std::string& prefix, const std::string& type, const std::string& value,
 	const std::vector<Hansel::Dependency*>* dependencies)
@@ -24,11 +24,13 @@ static void Print_Internal(const std::string& prefix, const std::string& type, c
 	}
 }
 
-// TODO: implement missing
 
 bool Hansel::ProjectDependency::Realize() const
 {
-	return false;
+	bool result = true;
+	for (const Dependency* dependency : dependencies)
+		result = result && dependency->Realize();
+	return result;
 }
 
 void Hansel::ProjectDependency::Print(const std::string& prefix) const
@@ -39,7 +41,10 @@ void Hansel::ProjectDependency::Print(const std::string& prefix) const
 
 bool Hansel::LibraryDependency::Realize() const
 {
-	return false;
+	bool result = true;
+	for (const Dependency* dependency : dependencies)
+		result = result && dependency->Realize();
+	return result;
 }
 
 void Hansel::LibraryDependency::Print(const std::string& prefix) const
@@ -51,7 +56,13 @@ void Hansel::LibraryDependency::Print(const std::string& prefix) const
 
 bool Hansel::FileDependency::Realize() const
 {
-	return false;
+	const std::error_code err = Utilities::CopySingleFile(path, destination);
+	if (err.value() != 0)
+	{
+		Logger::Error(err.message());
+		return false;
+	}
+	return true;
 }
 
 void Hansel::FileDependency::Print(const std::string& prefix) const
@@ -62,7 +73,8 @@ void Hansel::FileDependency::Print(const std::string& prefix) const
 
 bool Hansel::FilesDependency::Realize() const
 {
-	return false;
+	// TODO: implement
+	return true;
 }
 
 void Hansel::FilesDependency::Print(const std::string& prefix) const
@@ -73,7 +85,13 @@ void Hansel::FilesDependency::Print(const std::string& prefix) const
 
 bool Hansel::DirectoryDependency::Realize() const
 {
-	return false;
+	const std::error_code err = Utilities::CopyDirectory(path, destination);
+	if (err.value() != 0)
+	{
+		Logger::Error(err.message());
+		return false;
+	}
+	return true;
 }
 
 void Hansel::DirectoryDependency::Print(const std::string& prefix) const
@@ -84,7 +102,8 @@ void Hansel::DirectoryDependency::Print(const std::string& prefix) const
 
 bool Hansel::CommandDependency::Realize() const
 {
-	return false;
+	// TODO: implement
+	return true;
 }
 
 void Hansel::CommandDependency::Print(const std::string& prefix) const

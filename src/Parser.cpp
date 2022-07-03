@@ -92,7 +92,7 @@ namespace Hansel
 
             if (element_name == "Dependencies")
             {
-                std::vector<Dependency*> some_dependencies = ParseDependencies(element, settings);
+                const std::vector<Dependency*> some_dependencies = ParseDependencies(element, settings);
                 dependencies.insert(dependencies.end(), some_dependencies.begin(), some_dependencies.end());
             }
             else
@@ -117,9 +117,9 @@ namespace Hansel
         std::vector<Dependency*> dependencies;
 
         // Parse <ProjectPath>, <LibraryPath> and <CommandPath> attributes
-        std::optional<std::string> project_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "ProjectPath", settings.variables);
-        std::optional<std::string> library_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "LibraryPath", settings.variables);
-        std::optional<std::string> command_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "CommandPath", settings.variables);
+        const std::optional<std::string> project_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "ProjectPath", settings.variables);
+        const std::optional<std::string> library_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "LibraryPath", settings.variables);
+        const std::optional<std::string> command_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "CommandPath", settings.variables);
 
         std::vector<std::string> project_root_paths;
         if (project_path_attribute.has_value())
@@ -238,13 +238,14 @@ namespace Hansel
         }
 
         // Derive the path of the target breadcrumb
-        Path project_breadcrumb_path = Utilities::CombinePath(project_directory_path, name.value() + ".hbc");
+        const Path project_breadcrumb_path = Utilities::CombinePath(project_directory_path, name.value() + ".hbc");
 
         // Recursively parse the target breadcrumb with updated settings
         Settings parser_settings = settings;
         parser_settings.target = project_breadcrumb_path;
+        parser_settings.variables["OUTPUT_DIR"] = destination.value();
 
-        std::vector<Dependency*> project_dependencies = ParseBreadcrumb(project_breadcrumb_path, parser_settings);
+        const std::vector<Dependency*> project_dependencies = ParseBreadcrumb(project_breadcrumb_path, parser_settings);
 
         return new ProjectDependency
         (
@@ -288,13 +289,14 @@ namespace Hansel
         }
 
         // Derive the path of the target breadcrumb
-        Path library_breadcrumb_path = Utilities::CombinePath(library_directory_path, name.value() + ".hbc");
+        const Path library_breadcrumb_path = Utilities::CombinePath(library_directory_path, name.value() + ".hbc");
 
         // Recursively parse the target breadcrumb with updated settings
         Settings parser_settings = settings;
         parser_settings.target = library_breadcrumb_path;
+        parser_settings.variables["OUTPUT_DIR"] = destination.value();
 
-        std::vector<Dependency*> library_dependencies = ParseBreadcrumb(library_breadcrumb_path, parser_settings);
+        const std::vector<Dependency*> library_dependencies = ParseBreadcrumb(library_breadcrumb_path, parser_settings);
 
         return new LibraryDependency
         (
@@ -483,7 +485,7 @@ namespace Hansel
     {
         T result = T(0);
 
-        std::vector<std::string> strings = Utilities::SplitString(field_value, '|');
+        const std::vector<std::string> strings = Utilities::SplitString(field_value, '|');
         for (std::string& str : strings)
         {
             // Remove possible variations by trimming whitespaces and lowering the string
@@ -520,11 +522,11 @@ namespace Hansel
             return false;
 
         // Read <Platform> attribute flags
-        std::optional<std::string> platform_attribute = GetAttributeAsRawString(restrict_element, "Platform");
+        const std::optional<std::string> platform_attribute = GetAttributeAsRawString(restrict_element, "Platform");
         if (!platform_attribute.has_value())
             throw std::exception("invalid <Restrict> node (missing 'Platform' attribute)");
 
-        Platform::OperatingSystem os_mask = ParsePlatformSpecifierFlags<Platform::OperatingSystem>
+        const Platform::OperatingSystem os_mask = ParsePlatformSpecifierFlags<Platform::OperatingSystem>
         (
             "Platform",
             platform_attribute.value(),
@@ -532,11 +534,11 @@ namespace Hansel
         );
 
         // Read <Architecture> attribute flags
-        std::optional<std::string> architecture_attribute = GetAttributeAsRawString(restrict_element, "Architecture");
+        const std::optional<std::string> architecture_attribute = GetAttributeAsRawString(restrict_element, "Architecture");
         if (!architecture_attribute.has_value())
             throw std::exception("invalid <Restrict> node (missing 'Architecture' attribute)");
 
-        Platform::Architecture arch_mask = ParsePlatformSpecifierFlags<Platform::Architecture>
+        const Platform::Architecture arch_mask = ParsePlatformSpecifierFlags<Platform::Architecture>
         (
             "Architecture",
             architecture_attribute.value(),
@@ -544,11 +546,11 @@ namespace Hansel
         );
 
         // Read <Configuration> attribute flags
-        std::optional<std::string> configuration_attribute = GetAttributeAsRawString(restrict_element, "Configuration");
+        const std::optional<std::string> configuration_attribute = GetAttributeAsRawString(restrict_element, "Configuration");
         if (!configuration_attribute.has_value())
             throw std::exception("invalid <Restrict> node (missing 'Configuration' attribute)");
 
-        Platform::Configuration config_mask = ParsePlatformSpecifierFlags<Platform::Configuration>
+        const Platform::Configuration config_mask = ParsePlatformSpecifierFlags<Platform::Configuration>
         (
             "Configuration",
             configuration_attribute.value(),
@@ -574,7 +576,7 @@ namespace Hansel
 
     std::optional<std::string> Parser::GetAttributeAsSubstitutedString(const tinyxml2::XMLElement* element, const char* attribute, const Environment& environment)
     {
-        std::optional<std::string> attribute_string = GetAttributeAsRawString(element, attribute);
+        const std::optional<std::string> attribute_string = GetAttributeAsRawString(element, attribute);
         if (!attribute_string.has_value())
             return std::optional<std::string>(std::nullopt);
 
@@ -587,8 +589,8 @@ namespace Hansel
         std::smatch variable_match;
         while (std::regex_search(attribute_value, variable_match, variable_regex))
         {
-            size_t match_position = variable_match.position();
-            size_t match_length = variable_match.length();
+            const size_t match_position = variable_match.position();
+            const size_t match_length = variable_match.length();
 
             if (match_length > 3)
             {
@@ -616,8 +618,7 @@ namespace Hansel
 
     std::optional<Path> Parser::GetAttributeAsPath(const tinyxml2::XMLElement* element, const char* attribute, const Environment& environment)
     {
-        // TODO(?): is it correct to always substitute variables in paths ?
-        std::optional<std::string> path_string = GetAttributeAsSubstitutedString(element, attribute, environment);
+        const std::optional<std::string> path_string = GetAttributeAsSubstitutedString(element, attribute, environment);
         if (!path_string.has_value())
             return std::optional<Path>(std::nullopt);
 
@@ -640,7 +641,7 @@ namespace Hansel
         // are tolerated (leading and trailing whitespaces are trimmed before parsing)
         static const std::regex version_regex("^\\d+\\.\\d+(\\.\\d+)?$");
 
-        std::optional<std::string> version_attribute = GetAttributeAsRawString(element, attribute);
+        const std::optional<std::string> version_attribute = GetAttributeAsRawString(element, attribute);
         if (!version_attribute.has_value())
             return std::optional<Version>(std::nullopt);
 
@@ -648,14 +649,14 @@ namespace Hansel
         if (!std::regex_match(version_str, version_regex))
             throw std::exception("version number does not match the MAJOR.MINOR[.PATCH] format");   // TODO: maybe should return null ? (unsure)
 
-        std::vector<std::string> version_number_components = Utilities::SplitString(version_str, '.');
+        const std::vector<std::string> version_number_components = Utilities::SplitString(version_str, '.');
 
-        uint32_t version_major = uint32_t(std::stoi(version_number_components[0]));
-        uint32_t version_minor = uint32_t(std::stoi(version_number_components[1]));
+        const uint32_t version_major = uint32_t(std::stoi(version_number_components[0]));
+        const uint32_t version_minor = uint32_t(std::stoi(version_number_components[1]));
 
         if (version_number_components.size() == 3)
         {
-            uint32_t version_patch = uint32_t(std::stoi(version_number_components[2]));
+            const uint32_t version_patch = uint32_t(std::stoi(version_number_components[2]));
             return Version{ version_major, version_minor, version_patch };
         }
         else

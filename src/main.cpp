@@ -73,8 +73,11 @@ int main(int argc, char* argv[])
         return -1;
     }
 
-    // TEST
+    // TEST PRINT
     PrintDependencies(dependencies, settings);
+
+    // TEST REALIZE
+    RealizeDependencies(dependencies, settings);
 
     return 0;
 }
@@ -83,7 +86,18 @@ int main(int argc, char* argv[])
 
 void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
 {
-    // TODO
+    std::printf("\nCopying dependencies of %s to '%s'\n", 
+        settings.GetTargetBreadcrumbFilename().c_str(), settings.output.c_str());
+
+    if (dependencies.size() > 0)
+    {
+        for (size_t i = 0; i < dependencies.size(); i++)
+            dependencies[i]->Realize();
+    }
+    else
+    {
+        std::printf("\n  NO DEPENDENCIES\n");
+    }
 }
 
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)

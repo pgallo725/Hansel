@@ -19,7 +19,7 @@ namespace Hansel
             Command
         };
 
-        virtual bool Realize() const = 0;   // TODO
+        virtual bool Realize() const = 0;
         // TODO: Add Check() function for --check mode (verify correctness and highlight issues)
         virtual void Print(const std::string& prefix) const = 0;
 

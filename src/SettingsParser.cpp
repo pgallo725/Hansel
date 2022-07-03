@@ -142,7 +142,7 @@ namespace Hansel
         try // validate path and throw exception if not valid
         {
             const std::filesystem::path value_path(value_str);
-            return value_path.lexically_normal().string();
+            return std::filesystem::absolute(value_path.lexically_normal()).string();
         }
         catch (std::exception)
         {
