@@ -498,9 +498,13 @@ namespace Hansel
             const auto it = mapping.find(str);
             if (it != mapping.end())
             {
+                // Check if the same flag has been repeated multiple times
+                if (static_cast<uint16_t>(result & it->second) != 0)
+                {
+                    Logger::Info("The '{}' flag is repeated multiple times in the <{}> field",
+                        str, field_name);
+                }
                 // Combine flags together with OR
-                // TODO(?): check if the flag has been repeated multiple times
-                //   and possibly warn the user if in verbose mode
                 result = result | it->second;
             }
             else

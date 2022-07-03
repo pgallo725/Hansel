@@ -61,14 +61,29 @@ namespace Hansel
         return static_cast<Platform::OperatingSystem>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
     }
 
+    inline Platform::OperatingSystem operator& (Platform::OperatingSystem a, Platform::OperatingSystem b)
+    {
+        return static_cast<Platform::OperatingSystem>(static_cast<uint16_t>(a) & static_cast<uint16_t>(b));
+    }
+
     inline Platform::Architecture operator| (Platform::Architecture a, Platform::Architecture b)
     {
         return static_cast<Platform::Architecture>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
     }
 
+    inline Platform::Architecture operator& (Platform::Architecture a, Platform::Architecture b)
+    {
+        return static_cast<Platform::Architecture>(static_cast<uint16_t>(a) & static_cast<uint16_t>(b));
+    }
+
     inline Platform::Configuration operator| (Platform::Configuration a, Platform::Configuration b)
     {
         return static_cast<Platform::Configuration>(static_cast<uint16_t>(a) | static_cast<uint16_t>(b));
+    }
+
+    inline Platform::Configuration operator& (Platform::Configuration a, Platform::Configuration b)
+    {
+        return static_cast<Platform::Configuration>(static_cast<uint16_t>(a) & static_cast<uint16_t>(b));
     }
 
 
