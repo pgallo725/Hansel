@@ -110,14 +110,13 @@ namespace Hansel
                 }
 
                 // Define special PLATFORM_DIR and OUTPUT_DIR environment variables
-                const std::string platform_dir_value = "win64d";    // TEMPORARY
                 if (settings.variables.contains("PLATFORM_DIR"))
                     Logger::Warn("PLATFORM_DIR is a reserved variable, the provided value will be replaced by '{}'",
-                        platform_dir_value);
+                        settings.platform.ToString());
                 if (settings.variables.contains("OUTPUT_DIR"))
                     Logger::Warn("OUTPUT_DIR is a reserved variable, the provided value will be replaced by '{}'",
                         settings.output);
-                settings.variables["PLATFORM_DIR"] = platform_dir_value;
+                settings.variables["PLATFORM_DIR"] = settings.platform.ToString();
                 settings.variables["OUTPUT_DIR"] = settings.output;
             }
             else

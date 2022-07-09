@@ -53,6 +53,35 @@ namespace Hansel
         OperatingSystem	os;
         Architecture arch;
         Configuration config;
+
+        std::string ToString() const
+        {
+            std::stringstream stream;
+
+            switch (os)
+            {
+                case OperatingSystem::Windows: stream << "win"; break;
+                case OperatingSystem::Linux: stream << "linux"; break;
+                case OperatingSystem::Mac: stream << "macosx"; break;
+                default: return "undefined";
+            }
+
+            switch (arch)
+            {
+                case Architecture::x86: stream << "32"; break;
+                case Architecture::x64: stream << "64"; break;
+                default: return "undefined";
+            }
+
+            switch (config)
+            {
+                case Configuration::Debug:   stream << 'd'; break;
+                case Configuration::Release: break;
+                default: return "undefined";
+            }
+
+            return stream.str();
+        }
     };
 
 
