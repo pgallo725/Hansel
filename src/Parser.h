@@ -17,9 +17,11 @@ namespace Hansel
     {
     public:
 
-        /* 
-            TODO: documentation
-        */
+        /* Parse the content of the breadcrumb file at 'path_to_breadcrumb' with the given settings,
+            evaluating <Restrict> nodes and returning the list of dependencies described by the file.
+           If some of the dependencies have their own breadcrumb file, the parsing and evaluation
+            proceeds recursively until the entire dependency sub-tree is built.
+           Throws an std::exception for any unrecoverable issue that is encountered during parsing. */
         static std::vector<Dependency*> ParseBreadcrumb(const Path& path_to_breadcrumb, const Settings& settings);
 
     private:

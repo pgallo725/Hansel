@@ -113,7 +113,9 @@ namespace Hansel
             return std::optional<Path>(std::nullopt);
         }
 
-        // TODO: documentation
+        /* Returns the input path as absolute and in lexically normal form.
+           If the original path is already in absolute form it is only normalized,
+            otherwise the relative path is combined with the given root to create the absolute path. */
         static Path MakeAbsolutePath(const Path& path, const Path& root)
         {
             const std::filesystem::path original_path(TrimString(path));
@@ -123,7 +125,8 @@ namespace Hansel
         }
 
 
-        // TODO: documentation
+        /* Recursively copies the source directory and all of its contents into the target directory path. 
+           The copy operation overwrites any existing file or directory in the target path. */
         static std::error_code CopyDirectory(const Path& from, const Path& to)
         {
             const std::filesystem::copy_options options =
@@ -140,7 +143,8 @@ namespace Hansel
             return err;
         }
 
-        // TODO: documentation
+        /* Recursively copies the specified file into the target directory path.
+           The copy operation overwrites any existing file with the same name in the target path. */
         static std::error_code CopySingleFile(const Path& from, const Path& to)
         {
             const std::filesystem::copy_options options =
@@ -156,7 +160,11 @@ namespace Hansel
             return err;
         }
 
-        // TODO: documentation
+        /* Copy all of the files that match with the given pattern into the specified target.
+           The pattern matching is done according to Unix-style pathname pattern expansion, also known as globbing.
+           For more details about the pattern syntax and glob wildcards refer to:
+            https://github.com/p-ranav/glob/blob/master/README.md#wildcards
+           The copy operation overwrites any existing file with the same name in the target path. */
         static std::error_code CopyMultipleFiles(const String& from_pattern, const Path& to)
         {
             // Make sure that the target path exists before copying to it

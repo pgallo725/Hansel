@@ -7,9 +7,8 @@ namespace Hansel
 {
     struct SettingsParser
     {
-        /*
-            TODO: documentation
-        */
+        /* Parse the application's command line parameters into the returned Settings struct.
+           Throws an std::exception for any unrecoverable issue that is encountered during parsing. */
         static Settings ParseCommandLine(const int argc, const char* const argv[]);
 
     private:
