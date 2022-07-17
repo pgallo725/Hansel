@@ -32,7 +32,10 @@ using namespace Hansel;
 */
 
 
-// DEV NOTE: destination paths specified by dependencies must be relative to the base target's install path
+// TODOs:
+//   1. Add support for <Command> dependencies by implementing their Realize() function
+//   2. Improve <Restrict> node by adding a way to express conditions on environment variables, and also default values for all filters
+//   3. Implement Check() functionality at both the application and Dependency class levels
 
 void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);

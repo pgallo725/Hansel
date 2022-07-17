@@ -80,6 +80,7 @@ namespace Hansel
                 parsed_options.insert(VerboseOptionName);
 
                 settings.verbose = true;
+                Logger::SetVerbose(true);
                 continue;
             }
 

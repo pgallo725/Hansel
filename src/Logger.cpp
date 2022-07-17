@@ -6,6 +6,7 @@
 namespace Hansel
 {
 	std::shared_ptr<spdlog::logger> Logger::s_HanselLogger;
+	bool Logger::s_Verbose = false;
 
 	void Logger::Init()
 	{
