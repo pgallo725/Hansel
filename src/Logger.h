@@ -41,19 +41,19 @@ namespace Hansel
 		{ s_HanselLogger->info("[INFO] " + fmt, std::forward<Args>(args)...); }
 		template<typename... Args>
 		inline static void InfoVerbose(const std::string& fmt, Args &&...args)
-		{ if (s_Verbose) Info(fmt, args); }
+		{ if (s_Verbose) Info(fmt, std::forward<Args>(args)...); }
 		template<typename... Args>
 		inline static void Warn(const std::string& fmt, Args &&...args)
 		{ s_HanselLogger->warn("[WARNING] " + fmt, std::forward<Args>(args)...); }
 		template<typename... Args>
 		inline static void WarnVerbose(const std::string& fmt, Args &&...args)
-		{ if (s_Verbose) Warn(fmt, args); }
+		{ if (s_Verbose) Warn(fmt, std::forward<Args>(args)...); }
 		template<typename... Args>
 		inline static void Error(const std::string& fmt, Args &&...args)
 		{ s_HanselLogger->error("[ERROR] " + fmt, std::forward<Args>(args)...); }
 		template<typename... Args>
 		inline static void ErrorVerbose(const std::string& fmt, Args &&...args)
-		{ if (s_Verbose) Error(fmt, args); }
+		{ if (s_Verbose) Error(fmt, std::forward<Args>(args)...); }
 		template<typename... Args>
 		inline static void Critical(const std::string& fmt, Args &&...args)
 		{ s_HanselLogger->critical("[CRITICAL] " + fmt, std::forward<Args>(args)...); }
