@@ -19,8 +19,11 @@ namespace Hansel
             Command
         };
 
+        Type GetType() const { return type; }
+
+        virtual std::vector<Dependency*> GetAllDependencies() const = 0;
+
         virtual bool Realize() const = 0;
-        // TODO: Add Check() function for --check mode (verify correctness and highlight issues)
         virtual void Print(const std::string& prefix) const = 0;
 
     protected:
@@ -35,6 +38,8 @@ namespace Hansel
 
     class ProjectDependency : public Dependency
     {
+        friend class DependencyChecker;
+
     private:
 
         String  name;
@@ -50,6 +55,8 @@ namespace Hansel
             , name(name), path(path), destination(destination), dependencies(dependencies)
         {};
 
+        std::vector<Dependency*> GetAllDependencies() const override;
+
         bool Realize() const override;
         void Print(const std::string& prefix) const override;
     };
@@ -57,6 +64,8 @@ namespace Hansel
 
     class LibraryDependency : public Dependency
     {
+        friend class DependencyChecker;
+
     private:
 
         String   name;
@@ -73,6 +82,8 @@ namespace Hansel
             , name(name), version(version), path(path), destination(destination), dependencies(dependencies)
         {};
 
+        std::vector<Dependency*> GetAllDependencies() const override;
+
         bool Realize() const override;
         void Print(const std::string& prefix) const override;
     };
@@ -80,6 +91,8 @@ namespace Hansel
 
     class FileDependency : public Dependency
     {
+        friend class DependencyChecker;
+
     private:
 
         Path  path;
@@ -92,6 +105,8 @@ namespace Hansel
             , path(path), destination(destination)
         {};
 
+        std::vector<Dependency*> GetAllDependencies() const override;
+
         bool Realize() const override;
         void Print(const std::string& prefix) const override;
     };
@@ -99,6 +114,8 @@ namespace Hansel
 
     class FilesDependency : public Dependency
     {
+        friend class DependencyChecker;
+
     private:
 
         Path  path;
@@ -111,6 +128,8 @@ namespace Hansel
             , path(path), destination(destination)
         {};
 
+        std::vector<Dependency*> GetAllDependencies() const override;
+
         bool Realize() const override;
         void Print(const std::string& prefix) const override;
     };
@@ -118,6 +137,8 @@ namespace Hansel
 
     class DirectoryDependency : public Dependency
     {
+        friend class DependencyChecker;
+
     private:
 
         Path  path;
@@ -130,6 +151,8 @@ namespace Hansel
             , path(path), destination(destination)
         {};
 
+        std::vector<Dependency*> GetAllDependencies() const override;
+
         bool Realize() const override;
         void Print(const std::string& prefix) const override;
     };
@@ -137,6 +160,8 @@ namespace Hansel
 
     class CommandDependency : public Dependency
     {
+        friend class DependencyChecker;
+
     private:
 
         String  name;
@@ -149,6 +174,8 @@ namespace Hansel
             : Dependency(Type::Command)
             , name(name), path(path), arguments(arguments)
         {};
+
+        std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize() const override;
         void Print(const std::string& prefix) const override;

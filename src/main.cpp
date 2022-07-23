@@ -3,6 +3,7 @@
 #include "SettingsParser.h"
 #include "Dependencies.h"
 #include "Parser.h"
+#include "DependencyChecker.h"
 
 using namespace Hansel;
 
@@ -79,6 +80,9 @@ int main(int argc, char* argv[])
     // TEST PRINT
     PrintDependencies(dependencies, settings);
 
+    // TEST CHECK
+    CheckDependencies(dependencies, settings);
+
     // TEST REALIZE
     RealizeDependencies(dependencies, settings);
 
@@ -105,7 +109,19 @@ void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Set
 
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
 {
-    // TODO
+    std::printf("\nChecking all dependencies of %s for potential conflicts...\n",
+        settings.GetTargetBreadcrumbFilename().c_str());
+
+    if (dependencies.size() > 0)
+    {
+        bool all_good = DependencyChecker::Check(dependencies, settings);
+        std::printf("...done! %s.\n", 
+            all_good ? "No issues detected" : "Some issues were found, look at the application log for more details");
+    }
+    else
+    {
+        std::printf("  NO DEPENDENCIES\n");
+    }
 }
 
 void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)

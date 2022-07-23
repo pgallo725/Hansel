@@ -25,6 +25,19 @@ static void Print_Internal(const std::string& prefix, const std::string& type, c
 }
 
 
+std::vector<Hansel::Dependency*> Hansel::ProjectDependency::GetAllDependencies() const
+{
+	// Initialize the array with the direct dependencies of this entry
+	std::vector<Hansel::Dependency*> all_dependencies(dependencies);
+	for (const Dependency* dependency : dependencies)
+	{
+		// Get the indirect dependencies from each of the children and add them to the list
+		std::vector<Hansel::Dependency*> indirect_dependencies = dependency->GetAllDependencies();
+		all_dependencies.insert(all_dependencies.end(), indirect_dependencies.begin(), indirect_dependencies.end());
+	}
+	return all_dependencies;
+}
+
 bool Hansel::ProjectDependency::Realize() const
 {
 	bool result = true;
@@ -38,6 +51,19 @@ void Hansel::ProjectDependency::Print(const std::string& prefix) const
 	Print_Internal(prefix, "PROJECT", name, &dependencies);
 }
 
+
+std::vector<Hansel::Dependency*> Hansel::LibraryDependency::GetAllDependencies() const
+{
+	// Initialize the array with the direct dependencies of this entry
+	std::vector<Hansel::Dependency*> all_dependencies(dependencies);
+	for (const Dependency* dependency : dependencies)
+	{
+		// Get the indirect dependencies from each of the children and add them to the list
+		std::vector<Hansel::Dependency*> indirect_dependencies = dependency->GetAllDependencies();
+		all_dependencies.insert(all_dependencies.end(), indirect_dependencies.begin(), indirect_dependencies.end());
+	}
+	return all_dependencies;
+}
 
 bool Hansel::LibraryDependency::Realize() const
 {
@@ -53,6 +79,12 @@ void Hansel::LibraryDependency::Print(const std::string& prefix) const
 	Print_Internal(prefix, "LIBRARY", name_version_str, &dependencies);
 }
 
+
+std::vector<Hansel::Dependency*> Hansel::FileDependency::GetAllDependencies() const
+{
+	// No sub-dependencies
+	return {};
+}
 
 bool Hansel::FileDependency::Realize() const
 {
@@ -71,6 +103,12 @@ void Hansel::FileDependency::Print(const std::string& prefix) const
 }
 
 
+std::vector<Hansel::Dependency*> Hansel::FilesDependency::GetAllDependencies() const
+{
+	// No sub-dependencies
+	return {};
+}
+
 bool Hansel::FilesDependency::Realize() const
 {
 	const std::error_code err = Utilities::CopyMultipleFiles(path, destination);
@@ -88,6 +126,12 @@ void Hansel::FilesDependency::Print(const std::string& prefix) const
 }
 
 
+std::vector<Hansel::Dependency*> Hansel::DirectoryDependency::GetAllDependencies() const
+{
+	// No sub-dependencies
+	return {};
+}
+
 bool Hansel::DirectoryDependency::Realize() const
 {
 	const std::error_code err = Utilities::CopyDirectory(path, destination);
@@ -104,6 +148,12 @@ void Hansel::DirectoryDependency::Print(const std::string& prefix) const
 	Print_Internal(prefix, "DIRECTORY", path, nullptr);
 }
 
+
+std::vector<Hansel::Dependency*> Hansel::CommandDependency::GetAllDependencies() const
+{
+	// No sub-dependencies
+	return {};
+}
 
 bool Hansel::CommandDependency::Realize() const
 {
