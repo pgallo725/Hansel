@@ -260,6 +260,7 @@ namespace Hansel
 
         return new ProjectDependency
         (
+            settings.target,
             name.value(),
             project_directory_path,
             destination.value(),
@@ -311,6 +312,7 @@ namespace Hansel
 
         return new LibraryDependency
         (
+            settings.target,
             name.value(),
             version.value(),
             library_directory_path,
@@ -335,6 +337,7 @@ namespace Hansel
 
         return new FileDependency
         (
+            settings.target,
             complete_file_path,
             destination.value()
         );
@@ -356,6 +359,7 @@ namespace Hansel
 
         return new FilesDependency
         (
+            settings.target,
             complete_files_path,
             destination.value()
         );
@@ -377,6 +381,7 @@ namespace Hansel
 
         return new DirectoryDependency
         (
+            settings.target,
             complete_directory_path,
             destination.value()
         );
@@ -417,6 +422,7 @@ namespace Hansel
 
         return new CommandDependency
         (
+            settings.target,
             name.value_or(filename),
             command_path,
             arguments.value()

@@ -4,47 +4,46 @@
 
 namespace Hansel
 {
-class DependencyChecker
-{
-public:
-
-	static bool Check(const std::vector<Dependency*>& dependencies, const Settings& settings);
-
-private:
-
-
-	struct StringIgnoreCaseLess
+	class DependencyChecker
 	{
-		// case-independent (ci) compare_less binary function
-		struct nocase_compare
+	public:
+
+		static bool Check(const std::vector<Dependency*>& dependencies, const Settings& settings);
+
+	private:
+
+		struct StringIgnoreCaseLess
 		{
-			bool operator() (const unsigned char& c1, const unsigned char& c2) const 
+			// case-independent (ci) compare_less binary function
+			struct nocase_compare
 			{
-				return tolower(c1) < tolower(c2);
+				bool operator() (const unsigned char& c1, const unsigned char& c2) const 
+				{
+					return tolower(c1) < tolower(c2);
+				}
+			};
+
+			bool operator() (const std::string& s1, const std::string& s2) const 
+			{
+				return std::lexicographical_compare
+				(s1.begin(), s1.end(),		// source range
+					s2.begin(), s2.end(),   // dest range
+					nocase_compare());		// comparison
 			}
 		};
 
-		bool operator() (const std::string& s1, const std::string& s2) const 
+		struct LibraryDependencyEntry
 		{
-			return std::lexicographical_compare
-			(s1.begin(), s1.end(),		// source range
-				s2.begin(), s2.end(),   // dest range
-				nocase_compare());		// comparison
-		}
+			Hansel::String depender_name;
+			Hansel::Version library_version;
+
+			LibraryDependencyEntry(const Hansel::String& name, const Hansel::Version& version)
+				: depender_name(name), library_version(version)
+			{}
+		};
+
+		static bool CheckLibraryVersions(const Hansel::String& depender,
+			const std::vector<Hansel::Dependency*>& dependencies,
+			std::map<Hansel::String, LibraryDependencyEntry, StringIgnoreCaseLess>& libraries);
 	};
-
-	struct LibraryDependencyEntry
-	{
-		Hansel::String depender_name;
-		Hansel::Version library_version;
-
-		LibraryDependencyEntry(const Hansel::String& name, const Hansel::Version& version)
-			: depender_name(name), library_version(version)
-		{}
-	};
-
-	static bool CheckLibraryVersions(const Hansel::String& depender,
-		const std::vector<Hansel::Dependency*>& dependencies,
-		std::map<Hansel::String, LibraryDependencyEntry, StringIgnoreCaseLess>& libraries);
-};
 }

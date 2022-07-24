@@ -20,6 +20,7 @@ namespace Hansel
         };
 
         Type GetType() const { return type; }
+        Path GetParentBreadcrumbPath() const { return parent_breadcrumb_path; }
 
         virtual std::vector<Dependency*> GetAllDependencies() const = 0;
 
@@ -28,11 +29,12 @@ namespace Hansel
 
     protected:
 
-        Dependency(Type type) 
-            : type(type) 
+        Dependency(const Path& parent_breadcrumb, Type type)
+            : parent_breadcrumb_path(parent_breadcrumb), type(type)
         {};
 
         Type type;
+        Path parent_breadcrumb_path;
     };
 
 
@@ -50,8 +52,9 @@ namespace Hansel
 
     public:
 
-        ProjectDependency(const std::string& name, const Path& path, const Path& destination, const std::vector<Dependency*>& dependencies)
-            : Dependency(Type::Project)
+        ProjectDependency(const Path& parent_breadcrumb, const String& name, const Path& path, const Path& destination,
+            const std::vector<Dependency*>& dependencies)
+            : Dependency(parent_breadcrumb, Type::Project)
             , name(name), path(path), destination(destination), dependencies(dependencies)
         {};
 
@@ -77,8 +80,9 @@ namespace Hansel
 
     public:
 
-        LibraryDependency(const std::string& name, const Version& version, const Path& path, const Path& destination, const std::vector<Dependency*>& dependencies)
-            : Dependency(Type::Library)
+        LibraryDependency(const Path& parent_breadcrumb, const String& name, const Version& version, const Path& path,
+            const Path& destination, const std::vector<Dependency*>& dependencies)
+            : Dependency(parent_breadcrumb, Type::Library)
             , name(name), version(version), path(path), destination(destination), dependencies(dependencies)
         {};
 
@@ -100,8 +104,8 @@ namespace Hansel
 
     public:
 
-        FileDependency(const Path& path, const Path& destination)
-            : Dependency(Type::File)
+        FileDependency(const Path& parent_breadcrumb, const Path& path, const Path& destination)
+            : Dependency(parent_breadcrumb, Type::File)
             , path(path), destination(destination)
         {};
 
@@ -123,8 +127,8 @@ namespace Hansel
 
     public:
 
-        FilesDependency(const Path& path, const Path& destination)
-            : Dependency(Type::Files)
+        FilesDependency(const Path& parent_breadcrumb, const Path& path, const Path& destination)
+            : Dependency(parent_breadcrumb, Type::Files)
             , path(path), destination(destination)
         {};
 
@@ -146,8 +150,8 @@ namespace Hansel
 
     public:
 
-        DirectoryDependency(const Path& path, const Path& destination)
-            : Dependency(Type::Directory)
+        DirectoryDependency(const Path& parent_breadcrumb, const Path& path, const Path& destination)
+            : Dependency(parent_breadcrumb, Type::Directory)
             , path(path), destination(destination)
         {};
 
@@ -170,8 +174,8 @@ namespace Hansel
 
     public:
 
-        CommandDependency(const std::string& name, const Path& path, const std::string& arguments)
-            : Dependency(Type::Command)
+        CommandDependency(const Path& parent_breadcrumb, const String& name, const Path& path, const String& arguments)
+            : Dependency(parent_breadcrumb, Type::Command)
             , name(name), path(path), arguments(arguments)
         {};
 

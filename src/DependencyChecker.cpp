@@ -9,7 +9,7 @@ bool Hansel::DependencyChecker::Check(const std::vector<Hansel::Dependency*>& de
 {
 	bool result = true;
 	std::map<String, LibraryDependencyEntry, StringIgnoreCaseLess> libraries;
-	result = result && CheckLibraryVersions(settings.GetTargetBreadcrumbFilename(), dependencies, libraries);
+	result = result && CheckLibraryVersions(settings.target, dependencies, libraries);
 
 	// TODO: check files and directories that get copied as well, for potential overwrites
 
@@ -40,20 +40,20 @@ bool Hansel::DependencyChecker::CheckLibraryVersions(const Hansel::String& depen
 					// Emit an error if the libraries differ by their major version number
 					if (library->version.major != other.library_version.major)
 					{
-						Logger::Error("{} library major version number conflict between {} (v{}) and {} (v{})",
-							library->name, depender, library->version.ToString(), other.depender_name, other.library_version.ToString());
+						Logger::Error("{} library major version number conflict:\n\t (v{}) '{}'\n\t (v{}) '{}'",
+							library->name, library->version.ToString(), depender, other.library_version.ToString(), other.depender_name);
 					}
 					// Emit a warning if the libraries differ by their minor version number
 					else if (library->version.minor != other.library_version.minor)
 					{
-						Logger::Warn("{} library minor version number conflict between {} (v{}) and {} (v{})",
-							library->name, depender, library->version.ToString(), other.depender_name, other.library_version.ToString());
+						Logger::Error("{} library minor version number conflict:\n\t (v{}) '{}'\n\t (v{}) '{}'",
+							library->name, library->version.ToString(), depender, other.library_version.ToString(), other.depender_name);
 					}
 					// Notify the user if the libraries differ by their patch number
 					else if (library->version.patch != other.library_version.patch)
 					{
-						Logger::Warn("{} library patch number conflict between {} (v{}) and {} (v{})",
-							library->name, depender, library->version.ToString(), other.depender_name, other.library_version.ToString());
+						Logger::Warn("{} library patch number conflict:\n\t (v{}) '{}'\n\t (v{}) '{}'",
+							library->name, library->version.ToString(), depender, other.library_version.ToString(), other.depender_name);
 					}
 
 					// Update the entry in the map to keep the highest library version of the two
@@ -67,7 +67,12 @@ bool Hansel::DependencyChecker::CheckLibraryVersions(const Hansel::String& depen
 			}
 
 			// Recursively check this library's sub-dependencies
-			result = result && CheckLibraryVersions(library->name, library->dependencies, libraries);
+			if (library->dependencies.size() > 0)
+			{
+				// Workaround to get the library breadcrumb file path without storing it in the LibraryDependency class
+				const Hansel::Path& library_breadcrumb_path = library->dependencies[0]->GetParentBreadcrumbPath();
+				result = result && CheckLibraryVersions(library_breadcrumb_path, library->dependencies, libraries);
+			}
 		}
 
 		if (dependency->GetType() == Hansel::Dependency::Type::Project)
@@ -75,7 +80,12 @@ bool Hansel::DependencyChecker::CheckLibraryVersions(const Hansel::String& depen
 			const auto* project = dynamic_cast<const Hansel::ProjectDependency*>(dependency);
 
 			// Check sub-dependencies of projects as well
-			result = result && CheckLibraryVersions(project->name, project->dependencies, libraries);
+			if (project->dependencies.size() > 0)
+			{
+				// Workaround to get the project breadcrumb file path without storing it in the LibraryDependency class
+				const Hansel::Path& project_breadcrumb_path = project->dependencies[0]->GetParentBreadcrumbPath();
+				result = result && CheckLibraryVersions(project_breadcrumb_path, project->dependencies, libraries);
+			}
 		}
 	}
 

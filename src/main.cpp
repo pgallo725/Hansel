@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
     Logger::Init();
 
     // Usage example:
-    //  hansel.exe ./application.hbc win64d --env PLATFORM_DIR=win64d HW_ROOTDIR=./hw --verbose
+    //  hansel.exe --list ./application.hbc win64d --env PLATFORM_DIR=win64d HW_ROOTDIR=./hw --verbose
 
     Settings settings;
     try
@@ -58,7 +58,7 @@ int main(int argc, char* argv[])
     catch (std::exception e)
     {
         Logger::Error("{}\n"
-            "Usage: {} TO BE DEFINED"                                           // Required parameters
+            "Usage: {} TO BE DEFINED"                                           // TODO: Required parameters
             "[-e / --env <variable-definitions...>] [-v / --verbose]\n",        // Optional parameters
             e.what(), argv[0]);
 
@@ -109,7 +109,7 @@ void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Set
 
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
 {
-    std::printf("\n\nChecking all dependencies of %s for potential conflicts...\n",
+    std::printf("\n\nChecking dependencies of %s for potential conflicts...\n",
         settings.GetTargetBreadcrumbFilename().c_str());
 
     if (dependencies.size() > 0)
