@@ -165,7 +165,7 @@ namespace Hansel
             : Version(major, minor, NoValue)
         {}
 
-        std::strong_ordering operator<=>(const Version& other)
+        std::strong_ordering operator<=>(const Version& other) const
         {
             if (major > other.major)
                 return std::strong_ordering::greater;
