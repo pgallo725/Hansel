@@ -110,15 +110,16 @@ namespace Hansel
                     settings.variables.insert(variable_pair);
                 }
 
-                // Define special PLATFORM_DIR and OUTPUT_DIR environment variables
-                if (settings.variables.contains("PLATFORM_DIR"))
-                    Logger::Warn("PLATFORM_DIR is a reserved variable, the provided value will be replaced by '{}'",
-                        settings.platform.ToString());
+                // Define special OUTPUT_DIR and PLATFORM_DIR environment variables
                 if (settings.variables.contains("OUTPUT_DIR"))
                     Logger::Warn("OUTPUT_DIR is a reserved variable, the provided value will be replaced by '{}'",
                         settings.output);
+                if (settings.variables.contains("PLATFORM_DIR"))
+                    Logger::Warn("PLATFORM_DIR is a reserved variable, the provided value will be replaced by '{}'",
+                        settings.platform.ToString());
+                // Automatically append the platform identifier (e.g. win64d) to the specified output path
+                settings.variables["OUTPUT_DIR"] = Utilities::CombinePath(settings.output, settings.platform.ToString());
                 settings.variables["PLATFORM_DIR"] = settings.platform.ToString();
-                settings.variables["OUTPUT_DIR"] = settings.output;
             }
             else
             {

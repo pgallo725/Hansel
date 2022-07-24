@@ -35,7 +35,7 @@ using namespace Hansel;
 
 // TODOs:
 //   1. Add support for <Command> dependencies by implementing their Realize() function
-//   2. Improve <Restrict> node by adding a way to express conditions on environment variables, and also default values for all filters
+//   2. Improve <Restrict> node by adding a way to express conditions on environment variables
 //   3. Implement Check() functionality at both the application and Dependency class levels
 
 void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
@@ -93,7 +93,7 @@ int main(int argc, char* argv[])
 
 void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
 {
-    std::printf("\nCopying dependencies of %s to '%s'\n", 
+    std::printf("\n\nCopying dependencies of %s to '%s'\n", 
         settings.GetTargetBreadcrumbFilename().c_str(), settings.output.c_str());
 
     if (dependencies.size() > 0)
@@ -109,7 +109,7 @@ void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Set
 
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
 {
-    std::printf("\nChecking all dependencies of %s for potential conflicts...\n",
+    std::printf("\n\nChecking all dependencies of %s for potential conflicts...\n",
         settings.GetTargetBreadcrumbFilename().c_str());
 
     if (dependencies.size() > 0)
@@ -126,7 +126,7 @@ void CheckDependencies(const std::vector<Dependency*>& dependencies, const Setti
 
 void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
 {
-    std::printf("\n%s\n", settings.GetTargetBreadcrumbFilename().c_str());
+    std::printf("\n\n%s\n", settings.GetTargetBreadcrumbFilename().c_str());
 
     if (dependencies.size() > 0)
     {
