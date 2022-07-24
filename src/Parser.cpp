@@ -44,12 +44,16 @@ namespace Hansel
     };
 
 
+    // Specifies the maximum breadcrumb format version that is supported by this parser
+    const Hansel::Version PARSER_VERSION = { 0, 1, 0 };
+
+
     std::vector<Dependency*> Parser::ParseBreadcrumb(const Path& path_to_breadcrumb, const Settings& settings)
     {
         // Check if file exists
         if (!std::filesystem::exists(path_to_breadcrumb))
         {
-            throw std::exception(("no breadcrumb file found at '" + path_to_breadcrumb + "'").c_str());
+            throw std::exception(("No breadcrumb file found at '" + path_to_breadcrumb + "'").c_str());
         }
 
         // Load breadcrumb file and parse XML document
@@ -62,18 +66,25 @@ namespace Hansel
             throw std::exception(document.ErrorStr());
         }
 
+        // Log the path of the current file being parsed, to provide context for understanding error messages
+        Logger::Trace("Parsing breadcrumb: '{}'", path_to_breadcrumb);
+
         // Access the top-level <Breadcrumb> node
         tinyxml2::XMLElement* breadcrumb_element = document.FirstChildElement("Breadcrumb");
         if (!breadcrumb_element)
         {
-            throw std::exception("invalid breadcrumb file (no top-level <Breadcrumb> element)");
+            throw std::exception("Invalid breadcrumb file (no top-level <Breadcrumb> element)");
         }
 
-        // TODO: Check breadcrumb format version and do something with it
         const std::optional<Version> breadcrumb_version = GetAttributeAsVersion(breadcrumb_element, "FormatVersion");
         if (!breadcrumb_version.has_value())
         {
-            throw std::exception("invalid breadcrumb file (missing 'FormatVersion' attribute)");
+            throw std::exception("Invalid breadcrumb file (missing 'FormatVersion' attribute)");
+        }
+        if (breadcrumb_version.value() > PARSER_VERSION)
+        {
+            throw std::exception(("The breadcrumb file format version " + breadcrumb_version.value().ToString() 
+                + " is not supported by this version of Hansel").c_str());
         }
 
 
@@ -97,7 +108,7 @@ namespace Hansel
             }
             else
             {
-                throw std::exception(("element of type <" + element_name + "> is not supported at this location").c_str());
+                throw std::exception(("Element of type <" + element_name + "> is not supported at this location").c_str());
             }
 
             element = element->NextSiblingElement();
@@ -105,7 +116,7 @@ namespace Hansel
 
         if (dependencies.empty())
         {
-            Logger::Info("The breadcrumb file '{}' did not contain any dependency", path_to_breadcrumb);
+            Logger::InfoVerbose("The breadcrumb file '{}' did not contain any dependency", path_to_breadcrumb);
         }
 
         return dependencies;
@@ -169,7 +180,7 @@ namespace Hansel
         while (element != nullptr)
         {
             if (!element->NoChildren())
-                throw std::exception("dependency specifier elements must not have any children");
+                throw std::exception("Dependency specifier elements must not have any children");
 
             const std::string element_name = element->Name();
 
@@ -199,7 +210,7 @@ namespace Hansel
             }
             else
             {
-                throw std::exception(("element of type <" + element_name + "> is not supported at this location").c_str());
+                throw std::exception(("Element of type <" + element_name + "> is not supported at this location").c_str());
             }
 
             element = element->NextSiblingElement();
@@ -214,13 +225,13 @@ namespace Hansel
     {
         const std::optional<std::string> name = GetAttributeAsSubstitutedString(project_element, "Name", settings.variables);
         if (!name.has_value())
-            throw std::exception("invalid <Project> node (missing 'Name' attribute)");
+            throw std::exception("Invalid <Project> node (missing 'Name' attribute)");
 
         const std::optional<Path> path = GetAttributeAsPath(project_element, "Path", settings.variables);
 
         const std::optional<Path> destination = GetAttributeAsPath(project_element, "Destination", settings.variables);
         if (!destination.has_value())
-            throw std::exception("invalid <Project> node (missing 'Destination' attribute)");
+            throw std::exception("Invalid <Project> node (missing 'Destination' attribute)");
 
         // Resolve project directory using the Path attribute (if specified) or the value of the Name attribute
         Path project_directory_path;
@@ -232,7 +243,7 @@ namespace Hansel
         {
             const std::optional<Path> resolved_path = Utilities::ResolvePath(name.value(), project_root_paths);
             if (!resolved_path.has_value())
-                throw std::exception(("couldn't resolve '" + name.value() + "' project directory").c_str());
+                throw std::exception(("Couldn't resolve '" + name.value() + "' project directory").c_str());
 
             project_directory_path = resolved_path.value();
         }
@@ -261,17 +272,17 @@ namespace Hansel
     {
         const std::optional<std::string> name = GetAttributeAsSubstitutedString(library_element, "Name", settings.variables);
         if (!name.has_value())
-            throw std::exception("invalid <Library> node (missing 'Name' attribute)");
+            throw std::exception("Invalid <Library> node (missing 'Name' attribute)");
 
         const std::optional<Version> version = GetAttributeAsVersion(library_element, "Version");
         if (!version.has_value())
-            throw std::exception("invalid <Library> node (missing 'Version' attribute)");
+            throw std::exception("Invalid <Library> node (missing 'Version' attribute)");
 
         const std::optional<Path> path = GetAttributeAsPath(library_element, "Path", settings.variables);
 
         const std::optional<Path> destination = GetAttributeAsPath(library_element, "Destination", settings.variables);
         if (!destination.has_value())
-            throw std::exception("invalid <Library> node (missing 'Destination' attribute)");
+            throw std::exception("Invalid <Library> node (missing 'Destination' attribute)");
 
         // Resolve library directory using the Path attribute (if specified) or the values of the Name/Version attributes
         Path library_directory_path;
@@ -283,7 +294,7 @@ namespace Hansel
         {
             const std::optional<Path> resolved_path = Utilities::ResolvePath(name.value() + "/" + version.value().ToString(), library_root_paths);
             if (!resolved_path.has_value())
-                throw std::exception(("couldn't resolve '" + name.value() + "(" + version.value().ToString() + ")' library directory").c_str());
+                throw std::exception(("Couldn't resolve '" + name.value() + "(" + version.value().ToString() + ")' library directory").c_str());
 
             library_directory_path = resolved_path.value();
         }
@@ -313,11 +324,11 @@ namespace Hansel
     {
         const std::optional<Path> path = GetAttributeAsPath(file_element, "Path", settings.variables);
         if (!path.has_value())
-            throw std::exception("invalid <File> node (missing 'Path' attribute)");
+            throw std::exception("Invalid <File> node (missing 'Path' attribute)");
 
         const std::optional<Path> destination = GetAttributeAsPath(file_element, "Destination", settings.variables);
         if (!destination.has_value())
-            throw std::exception("invalid <File> node (missing 'Destination' attribute)");
+            throw std::exception("Invalid <File> node (missing 'Destination' attribute)");
 
         // Extract the "full" path to the dependency file
         const Path complete_file_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
@@ -334,11 +345,11 @@ namespace Hansel
     {
         const std::optional<Path> path = GetAttributeAsPath(files_element, "Path", settings.variables);
         if (!path.has_value())
-            throw std::exception("invalid <Files> node (missing 'Path' attribute)");
+            throw std::exception("Invalid <Files> node (missing 'Path' attribute)");
 
         const std::optional<Path> destination = GetAttributeAsPath(files_element, "Destination", settings.variables);
         if (!destination.has_value())
-            throw std::exception("invalid <Files> node (missing 'Destination' attribute)");
+            throw std::exception("Invalid <Files> node (missing 'Destination' attribute)");
 
         // Extract the "full" path to the dependency files
         const Path complete_files_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
@@ -355,11 +366,11 @@ namespace Hansel
     {
         const std::optional<Path> path = GetAttributeAsPath(directory_element, "Path", settings.variables);
         if (!path.has_value())
-            throw std::exception("invalid <Directory> node (missing 'Path' attribute)");
+            throw std::exception("Invalid <Directory> node (missing 'Path' attribute)");
 
         const std::optional<Path> destination = GetAttributeAsPath(directory_element, "Destination", settings.variables);
         if (!destination.has_value())
-            throw std::exception("invalid <Directory> node (missing 'Destination' attribute)");
+            throw std::exception("Invalid <Directory> node (missing 'Destination' attribute)");
 
         // Extract the "full" path to the dependency directory
         const Path complete_directory_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
@@ -378,11 +389,11 @@ namespace Hansel
 
         const std::optional<Path> path = GetAttributeAsPath(command_element, "Path", settings.variables);
         if (!name.has_value() && !path.has_value())
-            throw std::exception("invalid <Command> node (missing atleast one of 'Name' or 'Path' attributes)");
+            throw std::exception("Invalid <Command> node (missing atleast one of 'Name' or 'Path' attributes)");
 
         const std::optional<std::string> arguments = GetAttributeAsSubstitutedString(command_element, "Arguments", settings.variables);
         if (!arguments.has_value())
-            throw std::exception("invalid <Command> node (missing 'Arguments' attribute)");
+            throw std::exception("Invalid <Command> node (missing 'Arguments' attribute)");
 
         // Derive filename from Name or Path attributes
         const std::string filename = (name.has_value() && !path.has_value())
@@ -399,7 +410,7 @@ namespace Hansel
         {
             const std::optional<Path> resolved_path = Utilities::ResolvePath(name.value(), command_root_paths);
             if (!resolved_path.has_value())
-                throw std::exception(("couldn't resolve '" + name.value() + "' command path").c_str());
+                throw std::exception(("Couldn't resolve '" + name.value() + "' command path").c_str());
 
             command_path = resolved_path.value();
         }
@@ -495,8 +506,7 @@ namespace Hansel
                 // Check if the same flag has been repeated multiple times
                 if (static_cast<uint16_t>(result & it->second) != 0)
                 {
-                    Logger::Info("The '{}' flag is repeated multiple times in the <{}> field",
-                        str, field_name);
+                    Logger::WarnVerbose("The '{}' flag is repeated multiple times in the <{}> field", str, field_name);
                 }
                 // Combine flags together with OR
                 result = result | it->second;
@@ -509,7 +519,7 @@ namespace Hansel
 
         if (result == T(0))
         {
-            throw std::exception("platform specifier flags cannot be left empty");
+            throw std::exception("Platform specifier flags cannot be left empty");
         }
         return result;
     }
@@ -589,7 +599,7 @@ namespace Hansel
                 // Find variable in map and get its value
                 const auto it = environment.find(variable_name);
                 if (it == environment.end())
-                    throw std::exception(("cannot substitute $(" + variable_name + "), variable not defined").c_str());
+                    throw std::exception(("Cannot substitute $(" + variable_name + "), variable not defined").c_str());
                 const std::string& variable_value = it->second;
 
                 // Replace variable value into original string
@@ -611,14 +621,14 @@ namespace Hansel
         if (!path_string.has_value())
             return std::optional<Path>(std::nullopt);
 
-        try // validate path and throw exception if not valid
+        try // validate path and print error if not valid
         {
             const std::filesystem::path path(path_string.value());
             return Path(path.lexically_normal().string());
         }
         catch (std::exception)
         {
-            const std::string error = "\'" + path_string.value() + "\' is not a valid path";
+            Logger::Error("'{}' is not a valid path", path_string.value());
             return std::optional<Path>(std::nullopt);
         }
     }
@@ -636,7 +646,7 @@ namespace Hansel
 
         const std::string version_str = Utilities::TrimString(version_attribute.value());
         if (!std::regex_match(version_str, version_regex))
-            throw std::exception("version number does not match the MAJOR.MINOR[.PATCH] format");   // TODO: maybe should return null ?
+            throw std::exception("Version number does not match the MAJOR.MINOR[.PATCH] format");   // TODO: maybe should return null ?
 
         const std::vector<std::string> version_number_components = Utilities::SplitString(version_str, '.');
 

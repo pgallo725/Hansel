@@ -44,7 +44,7 @@ namespace Hansel
         Settings settings;
 
         if (argc < 4)
-            throw std::exception("insufficient number of parameters");
+            throw std::exception("Insufficient number of parameters");
 
         int index = 1;
 
@@ -52,7 +52,7 @@ namespace Hansel
         settings.mode = ReadSpecialParam<Settings::Mode>(argv, index++, "execution-mode", SettingsParser::StringToModeMapping);
 
         if (settings.mode == Settings::Mode::Install && argc < 5)
-            throw std::exception("insufficient number of parameters");
+            throw std::exception("Insufficient number of parameters");
 
         //! Path to target
         settings.target = ReadPathParam(argv, index++, "target");
@@ -76,7 +76,7 @@ namespace Hansel
                 static const std::string VerboseOptionName = "verbose";
 
                 if (parsed_options.contains(VerboseOptionName))
-                    throw std::exception(("option '" + VerboseOptionName + "' has been specified multiple times").c_str());
+                    throw std::exception(("Option '" + VerboseOptionName + "' has been specified multiple times").c_str());
                 parsed_options.insert(VerboseOptionName);
 
                 settings.verbose = true;
@@ -85,7 +85,7 @@ namespace Hansel
             }
 
             if (index == argc)
-                throw std::exception(("option '" + option_str + "' is not followed by any value").c_str());
+                throw std::exception(("Option '" + option_str + "' is not followed by any value").c_str());
 
             //! Environment variables
             if (option_str == "-e" || option_str == "--env")
@@ -93,7 +93,7 @@ namespace Hansel
                 static const std::string EnvOptionName = "env";
 
                 if (parsed_options.contains(EnvOptionName))
-                    throw std::exception(("option '" + EnvOptionName + "' has been specified multiple times").c_str());
+                    throw std::exception(("Option '" + EnvOptionName + "' has been specified multiple times").c_str());
                 parsed_options.insert(EnvOptionName);
 
                 while (index < argc)
@@ -105,7 +105,7 @@ namespace Hansel
                     const std::pair<std::string, std::string> variable_pair = ReadEnvironmentVariable(argv, index++);
 
                     if (settings.variables.contains(variable_pair.first))
-                        throw std::exception(("variable '" + variable_pair.first + "' has been already defined").c_str());
+                        throw std::exception(("Variable '" + variable_pair.first + "' has been already defined").c_str());
 
                     settings.variables.insert(variable_pair);
                 }
@@ -188,7 +188,7 @@ namespace Hansel
         const std::string option_str = std::string(argv[index]);
 
         if (!(option_str.starts_with("--") || option_str.starts_with('-')))
-            throw std::exception("option specifiers must begin with '-' or '--' (e.g. --verbose)");
+            throw std::exception("Option specifiers must begin with '-' or '--' (e.g. --verbose)");
 
         return option_str;
     }
@@ -205,11 +205,11 @@ namespace Hansel
 
         // Check correctness of the variable definition
         if (variable_str.find('$') != std::string::npos)
-            throw std::exception("env variable definitions must not contain the '$' character");
+            throw std::exception("Env. variable definitions must not contain the '$' character");
         if (variable_str.find('(') != std::string::npos || variable_str.find(')') != std::string::npos)
-            throw std::exception("env variable definitions must not contain the '(' or ')' characters");
+            throw std::exception("Env. variable definitions must not contain the '(' or ')' characters");
         if (!std::regex_match(variable_str, variable_regex))
-            throw std::exception(("env variable definition '" + variable_str + "' is not in a valid format").c_str());
+            throw std::exception(("Env. variable definition '" + variable_str + "' is not in a valid format").c_str());
 
         // Parse NAME=VALUE into std::pair and return
         const size_t splitpos = variable_str.find('=');

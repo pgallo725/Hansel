@@ -6,14 +6,6 @@
 #include "spdlog/fmt/fmt.h"
 
 
-#ifdef _DEBUG
-#define HANSEL_LOG_LEVEL	spdlog::level::trace
-#else
-// Remove 'trace' and 'debug' logs from Release builds
-#define HANSEL_LOG_LEVEL	spdlog::level::info
-#endif
-
-
 namespace Hansel
 {
 	class Logger
@@ -33,9 +25,14 @@ namespace Hansel
 		template<typename... Args>
 		inline static void Trace(const std::string& fmt, Args &&...args) 
 		{ s_HanselLogger->trace("[TRACE] " + fmt, std::forward<Args>(args)...); }
+#ifdef _DEBUG
 		template<typename... Args>
 		inline static void Debug(const std::string& fmt, Args &&...args)
 		{ s_HanselLogger->debug("[DEBUG] " + fmt, std::forward<Args>(args)...); }
+#else	// Remove 'DEBUG' logs from Release builds, but keep 'TRACE' enabled since it's used by the parser
+		template<typename... Args>
+		inline static void Debug(const std::string& fmt, Args &&...args) {}
+#endif
 		template<typename... Args>
 		inline static void Info(const std::string& fmt, Args &&...args)
 		{ s_HanselLogger->info("[INFO] " + fmt, std::forward<Args>(args)...); }

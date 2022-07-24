@@ -116,7 +116,7 @@ void CheckDependencies(const std::vector<Dependency*>& dependencies, const Setti
     {
         bool all_good = DependencyChecker::Check(dependencies, settings);
         std::printf("...done! %s.\n", 
-            all_good ? "No issues detected" : "Some issues were found, look at the application log for more details");
+            all_good ? "No issues detected" : "Some issues detected, read the logs for more details");
     }
     else
     {
