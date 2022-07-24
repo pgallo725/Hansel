@@ -519,48 +519,39 @@ namespace Hansel
         if (!restrict_element)
             return false;
 
-        // Read <Platform> attribute flags
+        // Read <Platform> attribute flags, or set the default filter value (any)
         const std::optional<std::string> platform_attribute = GetAttributeAsRawString(restrict_element, "Platform");
-        if (!platform_attribute.has_value())
-            throw std::exception("invalid <Restrict> node (missing 'Platform' attribute)");
-
         const Platform::OperatingSystem os_mask = ParsePlatformSpecifierFlags<Platform::OperatingSystem>
         (
             "Platform",
-            platform_attribute.value(),
+            platform_attribute.has_value() ? platform_attribute.value() : "any",
             StringToOperatingSystemMapping
         );
 
-        // Read <Architecture> attribute flags
+        // Read <Architecture> attribute flags, or set the default filter value (any)
         const std::optional<std::string> architecture_attribute = GetAttributeAsRawString(restrict_element, "Architecture");
-        if (!architecture_attribute.has_value())
-            throw std::exception("invalid <Restrict> node (missing 'Architecture' attribute)");
-
         const Platform::Architecture arch_mask = ParsePlatformSpecifierFlags<Platform::Architecture>
         (
             "Architecture",
-            architecture_attribute.value(),
+            architecture_attribute.has_value() ? architecture_attribute.value() : "any",
             StringToArchitectureMapping
         );
 
-        // Read <Configuration> attribute flags
+        // Read <Configuration> attribute flags, or set the default filter value (any)
         const std::optional<std::string> configuration_attribute = GetAttributeAsRawString(restrict_element, "Configuration");
-        if (!configuration_attribute.has_value())
-            throw std::exception("invalid <Restrict> node (missing 'Configuration' attribute)");
-
         const Platform::Configuration config_mask = ParsePlatformSpecifierFlags<Platform::Configuration>
         (
             "Configuration",
-            configuration_attribute.value(),
+            configuration_attribute.has_value() ? configuration_attribute.value() : "any",
             StringToConfigurationMapping
         );
 
         // Compare the restrict flags against the global platform specifier to check if it matches
-        if ((uint16_t(settings.platform.os) & uint16_t(os_mask)) != 0) return true;
-        if ((uint16_t(settings.platform.arch) & uint16_t(arch_mask)) != 0) return true;
-        if ((uint16_t(settings.platform.config) & uint16_t(config_mask)) != 0) return true;
+        if ((uint16_t(settings.platform.os) & uint16_t(os_mask)) == 0) return false;
+        if ((uint16_t(settings.platform.arch) & uint16_t(arch_mask)) == 0) return false;
+        if ((uint16_t(settings.platform.config) & uint16_t(config_mask)) == 0) return false;
 
-        return false;
+        return true;
     }
 
 
