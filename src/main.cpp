@@ -34,9 +34,8 @@ using namespace Hansel;
 
 
 // TODOs:
-//   1. Add support for <Command> dependencies by implementing their Realize() function
-//   2. Improve <Restrict> node by adding a way to express conditions on environment variables
-//   3. Implement Check() functionality at both the application and Dependency class levels
+//   1. Add support for <Command> dependencies by implementing their Realize() function, and possibly add a <Script> dependency
+//   2. Implement Check() functionality at both the application and Dependency class levels
 
 void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
@@ -58,7 +57,7 @@ int main(int argc, char* argv[])
     catch (std::exception e)
     {
         Logger::Error("{}\n"
-            "Usage: {} TO BE DEFINED"                                           // TODO: Required parameters
+            "Usage: {} TO BE DEFINED "                                          // TODO: Required parameters
             "[-e / --env <variable-definitions...>] [-v / --verbose]\n",        // Optional parameters
             e.what(), argv[0]);
 

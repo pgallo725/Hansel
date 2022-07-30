@@ -535,37 +535,77 @@ namespace Hansel
         if (!restrict_element)
             return false;
 
-        // Read <Platform> attribute flags, or set the default filter value (any)
-        const std::optional<std::string> platform_attribute = GetAttributeAsRawString(restrict_element, "Platform");
-        const Platform::OperatingSystem os_mask = ParsePlatformSpecifierFlags<Platform::OperatingSystem>
-        (
-            "Platform",
-            platform_attribute.has_value() ? platform_attribute.value() : "any",
-            StringToOperatingSystemMapping
-        );
+        for (const tinyxml2::XMLAttribute* attribute = restrict_element->FirstAttribute();
+            attribute != nullptr;
+            attribute = attribute->Next())
+        {
+            const std::string attribute_name_str = attribute->Name();
 
-        // Read <Architecture> attribute flags, or set the default filter value (any)
-        const std::optional<std::string> architecture_attribute = GetAttributeAsRawString(restrict_element, "Architecture");
-        const Platform::Architecture arch_mask = ParsePlatformSpecifierFlags<Platform::Architecture>
-        (
-            "Architecture",
-            architecture_attribute.has_value() ? architecture_attribute.value() : "any",
-            StringToArchitectureMapping
-        );
+            if (attribute_name_str == "Platform")
+            {
+                // Read <Platform> attribute flags
+                const std::optional<std::string> platform_attribute = GetAttributeAsRawString(restrict_element, "Platform");
+                const Platform::OperatingSystem os_mask = ParsePlatformSpecifierFlags<Platform::OperatingSystem>
+                (
+                    "Platform",
+                    platform_attribute.value(),
+                    StringToOperatingSystemMapping
+                );
 
-        // Read <Configuration> attribute flags, or set the default filter value (any)
-        const std::optional<std::string> configuration_attribute = GetAttributeAsRawString(restrict_element, "Configuration");
-        const Platform::Configuration config_mask = ParsePlatformSpecifierFlags<Platform::Configuration>
-        (
-            "Configuration",
-            configuration_attribute.has_value() ? configuration_attribute.value() : "any",
-            StringToConfigurationMapping
-        );
+                // Evaluate condition and exit immediately if not satisfied
+                if ((uint16_t(settings.platform.os) & uint16_t(os_mask)) == 0) 
+                    return false;
+            }
+            else if (attribute_name_str == "Architecture")
+            {
+                // Read <Architecture> attribute flags
+                const std::optional<std::string> architecture_attribute = GetAttributeAsRawString(restrict_element, "Architecture");
+                const Platform::Architecture arch_mask = ParsePlatformSpecifierFlags<Platform::Architecture>
+                (
+                    "Architecture",
+                    architecture_attribute.value(),
+                    StringToArchitectureMapping
+                );
 
-        // Compare the restrict flags against the global platform specifier to check if it matches
-        if ((uint16_t(settings.platform.os) & uint16_t(os_mask)) == 0) return false;
-        if ((uint16_t(settings.platform.arch) & uint16_t(arch_mask)) == 0) return false;
-        if ((uint16_t(settings.platform.config) & uint16_t(config_mask)) == 0) return false;
+                // Evaluate condition and exit immediately if not satisfied
+                if ((uint16_t(settings.platform.arch) & uint16_t(arch_mask)) == 0) 
+                    return false;
+            }
+            else if (attribute_name_str == "Configuration")
+            {
+                // Read <Configuration> attribute flags
+                const std::optional<std::string> configuration_attribute = GetAttributeAsRawString(restrict_element, "Configuration");
+                const Platform::Configuration config_mask = ParsePlatformSpecifierFlags<Platform::Configuration>
+                (
+                    "Configuration",
+                    configuration_attribute.value(),
+                    StringToConfigurationMapping
+                );
+
+                // Evaluate condition and exit immediately if not satisfied
+                if ((uint16_t(settings.platform.config) & uint16_t(config_mask)) == 0) 
+                    return false;
+            }
+            else
+            {
+                // Look for an environment variable with the attribute name
+                const std::string variable_name_str = Utilities::UpperString(attribute_name_str);
+                if (settings.variables.contains(variable_name_str))
+                {
+                    const std::optional<std::string> variable_str = 
+                        GetAttributeAsSubstitutedString(restrict_element, attribute_name_str.c_str(), settings.variables);
+
+                    // Evaluate condition and exit immediately if not satisfied
+                    if (settings.variables.at(variable_name_str) != variable_str.value()) 
+                        return false;
+                }
+                else
+                {
+                    throw std::exception(("The <Restrict> attribute '" + attribute_name_str 
+                        + "' does not match with any available filter or environment variable").c_str());
+                }
+            }
+        }
 
         return true;
     }
