@@ -22,6 +22,8 @@ namespace Hansel
         inline static std::string ReadOptionSpecifier(const char* const argv[], const int index);
         inline static std::pair<std::string, std::string> ReadEnvironmentVariable(const char* const argv[], const int index);
 
+        // Utility function for printing the execution parameters
+        inline static void PrintSettings(const Settings& settings);
 
         // Keywords mapping for the execution mode and the platform specifier string 
         static const std::map<std::string, Settings::Mode> StringToModeMapping;

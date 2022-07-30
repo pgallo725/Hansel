@@ -127,6 +127,10 @@ namespace Hansel
             }
         }
 
+        // Print a summary of the execution settings in verbose mode
+        if (settings.verbose)
+            PrintSettings(settings);
+
         return settings;
     }
 
@@ -216,5 +220,35 @@ namespace Hansel
         const std::string variable_name = Utilities::UpperString(variable_str.substr(0, splitpos));
         const std::string variable_value = variable_str.substr(splitpos + 1, variable_str.length());
         return { variable_name, variable_value };
+    }
+
+
+    void SettingsParser::PrintSettings(const Settings& settings)
+    {
+        std::string mode;
+        switch (settings.mode)
+        {
+            case Settings::Mode::Install: mode = "Install"; break;
+            case Settings::Mode::List:    mode = "List";    break;
+            case Settings::Mode::Check:   mode = "Check";   break;
+            default: throw std::exception("Unknown execution mode");
+        }
+
+        std::stringstream environment;
+        for (const auto entry : settings.variables)
+            environment << "\n        - " << entry.first << " = " << entry.second;
+
+        std::stringstream message;
+        message << "Hansel execution settings:"
+            << "\n    - Mode: " << mode
+            << "\n    - Target: '" << settings.target << "'"
+            << (settings.mode == Settings::Mode::Install ? 
+               "\n    - Output path: '" + settings.output + "'" : "")
+            << "\n    - Platform: " << settings.platform.ToString()
+            << "\n    - Environment variables:" << environment.str()
+            << "\n    - Verbose: " << (settings.verbose ? "Yes" : "No")
+            << std::endl;
+
+        Logger::InfoVerbose(message.str());
     }
 }
