@@ -76,18 +76,18 @@ namespace Hansel
 
 
         /* Returns a path obtained by concatenating the provided paths with a '/',
-            after trimming them and removing additional '/' characters. 
+            after trimming them and removing additional '/' or '\' characters. 
            The resulting path is normalized according to std::path::lexically_normal(). */
         static Path CombinePath(const Path& left, const Path& right)
         {
-            // Trim left path and strip trailing '/'
+            // Trim left path and strip trailing directory separators
             Path trimmed_left_path = Utilities::TrimString(left);
-            while (trimmed_left_path.ends_with('/'))
+            while (trimmed_left_path.ends_with('/') || trimmed_left_path.ends_with('\\'))
                 trimmed_left_path.pop_back();
 
-            // Trim right path and strip leading '/'
+            // Trim right path and strip leading directory separators
             Path trimmed_right_path = Utilities::TrimString(right);
-            while (trimmed_right_path.starts_with('/'))
+            while (trimmed_right_path.starts_with('/') || trimmed_right_path.starts_with('\\'))
                 trimmed_right_path.erase(trimmed_right_path.begin());
 
             // Concatenate paths together with a '/'
@@ -122,6 +122,59 @@ namespace Hansel
             return original_path.is_absolute() ?
                 original_path.lexically_normal().string() :
                 CombinePath(root, path);
+        }
+
+
+        /* Returns a flattened list of all absolute file paths contained in the provided 
+            directory and all its sub-directories. */
+        static std::vector<Path> GetAllFilesInDirectory(const Path& directory)
+        {
+            std::vector<Path> files;
+
+            for (auto const& dir_entry : std::filesystem::directory_iterator{ directory })
+            {
+                if (dir_entry.is_regular_file())
+                {
+                    files.push_back(dir_entry.path().string());
+                }
+                else if (dir_entry.is_directory())
+                {
+                    std::vector<Path> subdir_files = GetAllFilesInDirectory(dir_entry.path().string());
+                    files.insert(files.end(), subdir_files.begin(), subdir_files.end());
+                }
+            }
+
+            return files;
+        }
+
+        /* Returns a list of all absolute file paths that match with the provided pattern.
+           The pattern matching is done according to Unix-style pathname pattern expansion, also known as globbing.
+           For more details about the pattern syntax and glob wildcards refer to:
+            https://github.com/p-ranav/glob/blob/master/README.md#wildcards */
+        static std::vector<Path> GlobFiles(const String& pattern)
+        {
+            std::vector<Path> files;
+
+            const std::filesystem::path directory = std::filesystem::path(pattern).parent_path();
+            const std::string glob_pattern = std::filesystem::path(pattern).filename().string();
+
+            for (auto const& dir_entry : std::filesystem::directory_iterator{ directory })
+            {
+                if (glob::fnmatch_case(dir_entry.path(), glob_pattern))
+                {
+                    if (dir_entry.is_regular_file())
+                    {
+                        files.push_back(dir_entry.path().string());
+                    }
+                    else if (dir_entry.is_directory())
+                    {
+                        std::vector<Path> subdir_files = GetAllFilesInDirectory(dir_entry.path().string());
+                        files.insert(files.end(), subdir_files.begin(), subdir_files.end());
+                    }
+                }
+            }
+
+            return files;
         }
 
 

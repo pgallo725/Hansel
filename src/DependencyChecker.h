@@ -45,5 +45,20 @@ namespace Hansel
 		static bool CheckLibraryVersions(const Hansel::String& depender,
 			const std::vector<Hansel::Dependency*>& dependencies,
 			std::map<Hansel::String, LibraryDependencyEntry, StringIgnoreCaseLess>& libraries);
+
+
+		struct FileDependencyEntry
+		{
+			Hansel::String depender_name;
+			Hansel::Path file_path;
+
+			FileDependencyEntry(const Hansel::String& name, const Hansel::Path& path)
+				: depender_name(name), file_path(path)
+			{}
+		};
+
+		static bool CheckFileOverwrites(const Hansel::String& depender,
+			const std::vector<Hansel::Dependency*>& dependencies,
+			std::map<Hansel::Path, FileDependencyEntry, StringIgnoreCaseLess>& files);
 	};
 }

@@ -42,7 +42,10 @@ bool Hansel::ProjectDependency::Realize() const
 {
 	bool result = true;
 	for (const Dependency* dependency : dependencies)
-		result = result && dependency->Realize();
+	{
+		if (!dependency->Realize())
+			result = false;
+	}
 	return result;
 }
 
@@ -69,7 +72,10 @@ bool Hansel::LibraryDependency::Realize() const
 {
 	bool result = true;
 	for (const Dependency* dependency : dependencies)
-		result = result && dependency->Realize();
+	{
+		if (!dependency->Realize())
+			result = false;
+	}
 	return result;
 }
 
