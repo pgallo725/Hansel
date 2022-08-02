@@ -34,7 +34,8 @@ namespace Hansel
         static FileDependency*      ParseFileDependency(const tinyxml2::XMLElement* file_element, const Settings& settings);
         static FilesDependency*     ParseFilesDependency(const tinyxml2::XMLElement* files_element, const Settings& settings);
         static DirectoryDependency* ParseDirectoryDependency(const tinyxml2::XMLElement* directory_element, const Settings& settings);
-        static CommandDependency*   ParseCommandDependency(const tinyxml2::XMLElement* command_element, const Settings& settings, const std::vector<std::string>& command_root_paths);
+        static CommandDependency*   ParseCommandDependency(const tinyxml2::XMLElement* command_element, const Settings& settings);
+        static ScriptDependency*    ParseScriptDependency(const tinyxml2::XMLElement* script_element, const Settings& settings, const std::vector<std::string>& script_root_paths);
 
         // Restrict nodes handling
         static void ProcessChildrenRestrictNodes(tinyxml2::XMLNode* root, const Settings& settings);

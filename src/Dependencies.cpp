@@ -163,11 +163,52 @@ std::vector<Hansel::Dependency*> Hansel::CommandDependency::GetAllDependencies()
 
 bool Hansel::CommandDependency::Realize() const
 {
-	// TODO: implement
+	// Print command execution trace statements in verbose mode
+	Logger::TraceVerbose("Executing command >{}", code);
+	
+	// An explicit flush of std::cout is necessary before a call to std::system,
+	//  if the spawned process performs any screen I/O. 
+	std::cout.flush();
+
+	// Check the system command processor availability
+	if (!std::system(nullptr))
+		return false;
+
+	std::system(code.c_str());
 	return true;
 }
 
 void Hansel::CommandDependency::Print(const std::string& prefix) const
 {
-	Print_Internal(prefix, "COMMAND", path, nullptr);
+	Print_Internal(prefix, "COMMAND", code, nullptr);
+}
+
+
+std::vector<Hansel::Dependency*> Hansel::ScriptDependency::GetAllDependencies() const
+{
+	// No sub-dependencies
+	return {};
+}
+
+bool Hansel::ScriptDependency::Realize() const
+{
+	// Print script execution trace statements in verbose mode
+	Logger::TraceVerbose("Executing script: '{}'", path);
+	
+	// An explicit flush of std::cout is necessary before a call to std::system,
+	//  if the spawned process performs any screen I/O. 
+	std::cout.flush();
+
+	// Check the system command processor availability
+	if (!std::system(nullptr))
+		return false;
+
+	const std::string& script_cmd = interpreter + " \"" + path + "\" " + arguments;
+	std::system(script_cmd.c_str());
+	return true;
+}
+
+void Hansel::ScriptDependency::Print(const std::string& prefix) const
+{
+	Print_Internal(prefix, "SCRIPT", path, nullptr);
 }

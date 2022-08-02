@@ -25,6 +25,9 @@ namespace Hansel
 		template<typename... Args>
 		inline static void Trace(const std::string& fmt, Args &&...args) 
 		{ s_HanselLogger->trace("[TRACE] " + fmt, std::forward<Args>(args)...); }
+		template<typename... Args>
+		inline static void TraceVerbose(const std::string& fmt, Args &&...args) 
+		{ if (s_Verbose) Trace(fmt, std::forward<Args>(args)...); }
 #ifdef _DEBUG
 		template<typename... Args>
 		inline static void Debug(const std::string& fmt, Args &&...args)

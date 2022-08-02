@@ -127,10 +127,10 @@ namespace Hansel
     {
         std::vector<Dependency*> dependencies;
 
-        // Parse <ProjectPath>, <LibraryPath> and <CommandPath> attributes
+        // Parse <ProjectPath>, <LibraryPath> and <ScriptPath> attributes
         const std::optional<std::string> project_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "ProjectPath", settings.variables);
         const std::optional<std::string> library_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "LibraryPath", settings.variables);
-        const std::optional<std::string> command_path_attribute = GetAttributeAsSubstitutedString(dependencies_element, "CommandPath", settings.variables);
+        const std::optional<std::string> script_path_attribute  = GetAttributeAsSubstitutedString(dependencies_element, "ScriptPath",  settings.variables);
 
         std::vector<std::string> project_root_paths;
         if (project_path_attribute.has_value())
@@ -160,19 +160,19 @@ namespace Hansel
         // Append the current target directory path as the last (lower priority) library lookup path
         library_root_paths.push_back(settings.GetTargetDirectoryPath());
 
-        std::vector<std::string> command_root_paths;
-        if (command_path_attribute.has_value())
+        std::vector<std::string> script_root_paths;
+        if (script_path_attribute.has_value())
         {
-            command_root_paths = Utilities::SplitString(command_path_attribute.value(), ';');
-            for (size_t i = 0; i < command_root_paths.size(); i++)
+            script_root_paths = Utilities::SplitString(script_path_attribute.value(), ';');
+            for (size_t i = 0; i < script_root_paths.size(); i++)
             {
-                command_root_paths[i] = Utilities::TrimString(command_root_paths[i]);
-                if (command_root_paths[i].starts_with('.'))
-                    command_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), command_root_paths[i]);
+                script_root_paths[i] = Utilities::TrimString(script_root_paths[i]);
+                if (script_root_paths[i].starts_with('.'))
+                    script_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), script_root_paths[i]);
             }
         }
-        // Append the current target directory path as the last (lower priority) command lookup path
-        command_root_paths.push_back(settings.GetTargetDirectoryPath());
+        // Append the current target directory path as the last (lower priority) script lookup path
+        script_root_paths.push_back(settings.GetTargetDirectoryPath());
 
 
         // Iterate over all <Dependencies> children elements and parse them accordingly
@@ -206,7 +206,11 @@ namespace Hansel
             }
             else if (element_name == "Command")
             {
-                dependencies.push_back(ParseCommandDependency(element, settings, command_root_paths));
+                dependencies.push_back(ParseCommandDependency(element, settings));
+            }
+            else if (element_name == "Script")
+            {
+                dependencies.push_back(ParseScriptDependency(element, settings, script_root_paths));
             }
             else
             {
@@ -387,44 +391,60 @@ namespace Hansel
         );
     }
 
-    CommandDependency* Parser::ParseCommandDependency(const tinyxml2::XMLElement* command_element,
-        const Settings& settings, const std::vector<std::string>& command_root_paths)
+    CommandDependency* Parser::ParseCommandDependency(const tinyxml2::XMLElement* command_element, const Settings& settings)
     {
-        const std::optional<std::string> name = GetAttributeAsSubstitutedString(command_element, "Name", settings.variables);
-
-        const std::optional<Path> path = GetAttributeAsPath(command_element, "Path", settings.variables);
-        if (!name.has_value() && !path.has_value())
-            throw std::exception("Invalid <Command> node (missing atleast one of 'Name' or 'Path' attributes)");
-
-        const std::optional<std::string> arguments = GetAttributeAsSubstitutedString(command_element, "Arguments", settings.variables);
-        if (!arguments.has_value())
-            throw std::exception("Invalid <Command> node (missing 'Arguments' attribute)");
-
-        // Derive filename from Name or Path attributes
-        const std::string filename = (name.has_value() && !path.has_value())
-            ? name.value()
-            : std::filesystem::path(path.value()).filename().string();
-
-        // Resolve command path using the Path attribute (if specified) or the value of the Name attribute
-        Path command_path;
-        if (path.has_value())
-        {
-            command_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
-        }
-        else
-        {
-            const std::optional<Path> resolved_path = Utilities::ResolvePath(name.value(), command_root_paths);
-            if (!resolved_path.has_value())
-                throw std::exception(("Couldn't resolve '" + name.value() + "' command path").c_str());
-
-            command_path = resolved_path.value();
-        }
+        const std::optional<std::string> code = GetAttributeAsSubstitutedString(command_element, "Code", settings.variables);
 
         return new CommandDependency
         (
             settings.target,
+            code.value()
+        );
+    }
+
+    ScriptDependency* Parser::ParseScriptDependency(const tinyxml2::XMLElement* script_element,
+        const Settings& settings, const std::vector<std::string>& script_root_paths)
+    {
+        const std::optional<std::string> interpreter = GetAttributeAsSubstitutedString(script_element, "Interpreter", settings.variables);
+        if (!interpreter.has_value())
+            throw std::exception("Invalid <Script> node (missing 'Interpreter' attribute)");
+
+        const std::optional<std::string> name = GetAttributeAsSubstitutedString(script_element, "Name", settings.variables);
+
+        const std::optional<Path> path = GetAttributeAsPath(script_element, "Path", settings.variables);
+        if (!name.has_value() && !path.has_value())
+            throw std::exception("Invalid <Script> node (missing atleast one of 'Name' or 'Path' attributes)");
+
+        const std::optional<std::string> arguments = GetAttributeAsSubstitutedString(script_element, "Arguments", settings.variables);
+        if (!arguments.has_value())
+            throw std::exception("Invalid <Script> node (missing 'Arguments' attribute)");
+
+        // Derive script filename from Name or Path attributes
+        const std::string filename = (name.has_value() && !path.has_value())
+            ? name.value()
+            : std::filesystem::path(path.value()).filename().string();
+
+        // Resolve script path using the Path attribute (if specified) or the value of the Name attribute
+        Path script_path;
+        if (path.has_value())
+        {
+            script_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
+        }
+        else
+        {
+            const std::optional<Path> resolved_path = Utilities::ResolvePath(name.value(), script_root_paths);
+            if (!resolved_path.has_value())
+                throw std::exception(("Couldn't resolve '" + name.value() + "' script path").c_str());
+
+            script_path = resolved_path.value();
+        }
+
+        return new ScriptDependency
+        (
+            settings.target,
+            interpreter.value(),
             name.value_or(filename),
-            command_path,
+            script_path,
             arguments.value()
         );
     }
@@ -692,7 +712,7 @@ namespace Hansel
 
         const std::string version_str = Utilities::TrimString(version_attribute.value());
         if (!std::regex_match(version_str, version_regex))
-            throw std::exception("Version number does not match the MAJOR.MINOR[.PATCH] format");   // TODO: maybe should return null ?
+            throw std::exception("Version number does not match the MAJOR.MINOR[.PATCH] format");
 
         const std::vector<std::string> version_number_components = Utilities::SplitString(version_str, '.');
 

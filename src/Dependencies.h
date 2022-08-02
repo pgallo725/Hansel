@@ -16,7 +16,8 @@ namespace Hansel
             File,
             Files,
             Directory,
-            Command
+            Command,
+            Script
         };
 
         Type GetType() const { return type; }
@@ -168,15 +169,39 @@ namespace Hansel
 
     private:
 
+        String  code;
+
+    public:
+
+        CommandDependency(const Path& parent_breadcrumb, const String& code)
+            : Dependency(parent_breadcrumb, Type::Command)
+            , code(code)
+        {};
+
+        std::vector<Dependency*> GetAllDependencies() const override;
+
+        bool Realize() const override;
+        void Print(const std::string& prefix) const override;
+    };
+
+
+    class ScriptDependency : public Dependency
+    {
+        friend class DependencyChecker;
+
+    private:
+
+        Path    interpreter;
         String  name;
         Path    path;
         String  arguments;
 
     public:
 
-        CommandDependency(const Path& parent_breadcrumb, const String& name, const Path& path, const String& arguments)
-            : Dependency(parent_breadcrumb, Type::Command)
-            , name(name), path(path), arguments(arguments)
+        ScriptDependency(const Path& parent_breadcrumb, const Path& interpreter, const String& name,
+            const Path& path, const String& arguments)
+            : Dependency(parent_breadcrumb, Type::Script)
+            , interpreter(interpreter), name(name), path(path), arguments(arguments)
         {};
 
         std::vector<Dependency*> GetAllDependencies() const override;
