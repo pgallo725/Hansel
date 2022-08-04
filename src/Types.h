@@ -120,6 +120,7 @@ namespace Hansel
     {
         enum class Mode
         {
+            Help,
             Install,
             Check,
             List

@@ -18,7 +18,7 @@ using namespace Hansel;
     folder, running additional scripts (if specified), trying to
     automatically resolve paths and potential library conflicts.
 
-    2) hansel.exe --check <path-to-breadcrumb> <platform-specifier> [--env <variables>] [-v,--verbose]
+    2) hansel.exe --check <path-to-breadcrumb> <install-dir> <platform-specifier> [--env <variables>] [-v,--verbose]
 
     When launched with the 'check' option, Hansel does not perform any
     build step but is able to analyze the dependency tree of the target
@@ -30,13 +30,15 @@ using namespace Hansel;
     In 'list' mode, Hansel traverses the dependency tree of the specified
     target and prints it in a clear and understandable format in the
     output console.
+
+    4) hansel.exe --help
+
+    Additionally, the 'help' command prints the instructions for using 
+    the application and all the available command line options.
 */
 
 
-// TODOs:
-//   1. Add support for <Command> dependencies by implementing their Realize() function, and possibly add a <Script> dependency
-//   2. Implement Check() functionality at both the application and Dependency class levels
-
+void ShowHelp();
 void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
@@ -56,43 +58,100 @@ int main(int argc, char* argv[])
     }
     catch (std::exception e)
     {
-        Logger::Error("{}\n"
-            "Usage: {} TO BE DEFINED "                                          // TODO: Required parameters
-            "[-e / --env <variable-definitions...>] [-v / --verbose]\n",        // Optional parameters
-            e.what(), argv[0]);
+        Logger::Error("{}", e.what());
+
+        ShowHelp();
 
         return -1;
     }
 
     std::vector<Dependency*> dependencies;
-    try
+    if (settings.mode != Settings::Mode::Help)
     {
-        dependencies = Parser::ParseBreadcrumb(settings.target, settings);
+        try
+        {
+            dependencies = Parser::ParseBreadcrumb(settings.target, settings);
+        }
+        catch (std::exception e)
+        {
+            Logger::Error("{}", e.what());
+
+            return -1;
+        }
     }
-    catch (std::exception e)
+
+    switch (settings.mode)
     {
-        Logger::Error("{}", e.what());
+        case Settings::Mode::Help:
+        {
+            ShowHelp();
+            break;
+        }
 
-        return -1;
+        case Settings::Mode::Install:
+        {
+            RealizeDependencies(dependencies, settings);
+            break;
+        }
+
+        case Settings::Mode::Check:
+        {
+            CheckDependencies(dependencies, settings);
+            break;
+        }
+
+        case Settings::Mode::List:
+        {
+            PrintDependencies(dependencies, settings);
+            break;
+        }
+
+        default:
+            throw std::exception("Unknown execution mode");
     }
 
-    // TEST PRINT
-    PrintDependencies(dependencies, settings);
-
-    // TEST CHECK
-    CheckDependencies(dependencies, settings);
-
-    // TEST REALIZE
-    RealizeDependencies(dependencies, settings);
+    std::printf("\n");
 
     return 0;
 }
 
 
 
+void ShowHelp()
+{
+    std::printf("\nUsage:  Hansel --help"
+                "\n        Hansel --install <path-to-breadcrumb> <install-dir> <platform> [-e <variables>] [-v]"
+                "\n        Hansel --check <path-to-breadcrumb> <install-dir> <platform> [-e <variables>] [-v]"
+                "\n        Hansel --list <path-to-breadcrumb> <platform> [-e <variables>] [-v]"
+                "\n"
+                "\nModes:"
+                "\n"
+                "\n  -h / --help             Shows this help message"
+                "\n  -i / --install          Realize (copy / execute) all dependencies of the target breadcrumb"
+                "\n  -c / --check            Analyze the dependency tree and detect issues such as library or file conflicts"
+                "\n  -l / --list             Visualize the entire depedency tree of the target breadcrumb"
+                "\n"
+                "\nRequired:"
+                "\n"
+                "\n  <path-to-breadcrumb>    Path of the target Hansel breadcrumb file (*.hbc)"
+                "\n  <install-dir>           [INSTALL / CHECK] Output path of the installation process"
+                "\n  <platform>              Target platform for which dependencies will be processed"
+                "\n                           The platform specifier must be in the format xxxYY[d] where:"
+                "\n                             xxx = { win, linux, macosx }  (OS)"
+                "\n                              YY = { 32, 64 }              (Architecture)"
+                "\n                               d = Debug flag              (Configuration)"
+                "\nOptional:"
+                "\n"
+                "\n  -e / --env <variables>  Set of environment variable definitions."
+                "\n                           A variable definition is in the format VARIABLE_NAME=value"
+                "\n  -v / --verbose          Enable additional program outputs (verbose)"
+                "\n"
+    );
+}
+
 void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
 {
-    std::printf("\n\nCopying dependencies of %s to '%s'\n", 
+    std::printf("\nCopying dependencies of %s to '%s'...\n", 
         settings.GetTargetBreadcrumbFilename().c_str(), settings.output.c_str());
 
     if (dependencies.size() > 0)
@@ -108,7 +167,7 @@ void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Set
 
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
 {
-    std::printf("\n\nChecking dependencies of %s for potential conflicts...\n",
+    std::printf("\nChecking dependencies of %s for potential conflicts...\n",
         settings.GetTargetBreadcrumbFilename().c_str());
 
     if (dependencies.size() > 0)
@@ -119,13 +178,13 @@ void CheckDependencies(const std::vector<Dependency*>& dependencies, const Setti
     }
     else
     {
-        std::printf("  NO DEPENDENCIES\n");
+        std::printf("\n  NO DEPENDENCIES\n");
     }
 }
 
 void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
 {
-    std::printf("\n\n%s\n", settings.GetTargetBreadcrumbFilename().c_str());
+    std::printf("\n%s\n", settings.GetTargetBreadcrumbFilename().c_str());
 
     if (dependencies.size() > 0)
     {

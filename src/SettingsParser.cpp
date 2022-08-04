@@ -10,10 +10,12 @@ namespace Hansel
     const std::map<std::string, Settings::Mode>
         SettingsParser::StringToModeMapping
     {
+        { "--help",    Settings::Mode::Help },
         { "--install", Settings::Mode::Install },
         { "--check",   Settings::Mode::Check },
         { "--list",    Settings::Mode::List },
 
+        { "-h", Settings::Mode::Help },
         { "-i", Settings::Mode::Install },
         { "-c", Settings::Mode::Check },
         { "-l", Settings::Mode::List },
@@ -43,13 +45,20 @@ namespace Hansel
     {
         Settings settings;
 
-        if (argc < 4)
-            throw std::exception("Insufficient number of parameters");
-
         int index = 1;
 
         //! Execution mode specifier
         settings.mode = ReadSpecialParam<Settings::Mode>(argv, index++, "execution-mode", SettingsParser::StringToModeMapping);
+
+        if (settings.mode == Settings::Mode::Help)
+        {
+            if (argc > 2)
+                Logger::Warn("Additional parameters after -h / --help will be ignored");
+            return settings;
+        }
+
+        if (settings.mode != Settings::Mode::Help && argc < 4)
+            throw std::exception("Insufficient number of parameters");
 
         if (settings.mode == Settings::Mode::Install && argc < 5)
             throw std::exception("Insufficient number of parameters");
@@ -58,7 +67,7 @@ namespace Hansel
         settings.target = ReadPathParam(argv, index++, "target");
 
         //! Output directory
-        if (settings.mode == Settings::Mode::Install)
+        if (settings.mode == Settings::Mode::Install || settings.mode == Settings::Mode::Check)
             settings.output = ReadPathParam(argv, index++, "install-dir");
 
         //! Platform specifier
@@ -242,7 +251,7 @@ namespace Hansel
         message << "Hansel execution settings:"
             << "\n    - Mode: " << mode
             << "\n    - Target: '" << settings.target << "'"
-            << (settings.mode == Settings::Mode::Install ? 
+            << (settings.mode == Settings::Mode::Install || settings.mode == Settings::Mode::Check ?
                "\n    - Output path: '" + settings.output + "'" : "")
             << "\n    - Platform: " << settings.platform.ToString()
             << "\n    - Environment variables:" << environment.str()
