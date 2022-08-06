@@ -1,0 +1,111 @@
+# Hansel Breadcrumb format specification
+
+## XML format overview
+
+Like any other XML file format, *.hbc files can optionally contain the XML prolog which, if present,
+must come first in the document. UTF-8 character encoding is strongly recommended.
+
+The entire body of the file (excluding the prolog) must be contained inside a root node, which in
+the case of Hansel should be named <Breadcrumb>. Inside this node, there might be one or more nested
+elements following the Hansel notation (see below), each with zero or more attributes specifying 
+additional properties of the node, which might be optional or required.
+
+## XML elements and attributes
+
+The Hansel format defines a set of XML elements and attributes along with their semantics that can
+be used in a .hbc file in order to define the dependency tree and install requirements of the target.
+
+These elements and their attributes, along with their usage rules, are described in the following list:
+
+* <b>Breadcrumb</b>: 
+	* <i>FormatVersion</i>: Breacrumb file format version number (follows semantic versioning rules).
+
+* <b>Dependencies</b>: 
+	* <i>ProjectPath</i>: A sequence of (absolute or relative) directory paths, separated by ';',
+		which will be searched when looking for resolving the paths of <Project> dependencies from their name.
+		The order in which these paths are specified determines their priority (first ones are searched first).
+	* <i>LibraryPath</i>: Same as <ProjectPath>, but used for resolving paths of <Library> dependencies.
+	* <i>ScriptPath</i>: Same as <ProjectPath> and <LibraryPath>, but used for resolving paths of <Script> dependencies.
+	* If all provided root paths of a given dependency type do not produce any match, 
+		the current target directory is automatically used as a last lookup path.
+
+* <b>Project</b>: 
+	* <i>Name</i>: [Optional, Recommended] Name of the project dependency, which is used
+		 to look for the next breadcrumb file using the search paths defined in <ProjectPath>.
+		 Automatic path resolution will look for a "/NAME/NAME.hbc" file in all available paths.
+	* <i>Path</i>: [Optional, Required if <Name> is not specified] The (absolute or relative) path 
+		of the folder containing the project's breadcrumb file.
+	* <i>Destination</i>: The output path in which the project's dependencies will be copied.
+		It is highly recommended that this path always starts with $(OUTPUT_DIR).
+
+* <b>Library</b>: 
+	* <i>Name</i>: [Optional, Recommended] Name of the library, which is used to look for
+		 the next breadcrumb file using the search paths defined in <LibraryPath>.
+		 Automatic path resolution will look for a "/NAME/VERSIoN/NAME.hbc" file in all available paths.
+	* <i>Version</i>: [Optional, Recommended] Library version number (follows semantic versioning rules).
+	* <i>Path</i>: [Optional, Required if <Name> and <Version> are not specified] The (absolute or relative) 
+		path of the folder containing the library's breadcrumb file.
+	* <i>Destination</i>: The output path in which the all dependencies of the library will be copied.
+		It is highly recommended that this path always starts with $(OUTPUT_DIR).
+
+* <b>File</b>: 
+	* <i>Path</i>: The (absolute or relative) path of the target file.
+	* <i>Destination</i>: The output path in which the files will be copied (preserving the original filename).
+		It is highly recommended that this path always starts with $(OUTPUT_DIR).
+
+* <b>Files</b>: 
+	* <i>Path</i>: A (absolute or relative) UNIX-like globbing pattern that matches one or more files.
+	* <i>Destination</i>: The output path in which all files matching the given pattern will be copied.
+		It is highly recommended that this path always starts with $(OUTPUT_DIR).
+	* Rules for pattern matching (using https://github.com/p-ranav/glob)
+		- Pattern allowed only in the 'filename' component of the path
+		- * matches everything (if followed by something else, it matches everything up to that pattern, if the other pattern is not satisfied = no match)
+		- ? matches any single character
+		- [seq] matches any single character in seq
+		- [!seq] matches any single character not in seq
+		- [a-z] matches any single character in the range a-z
+		- To match * and ? literally, wrap them in square brackets
+		- [ and ] characters can be matched individually with '[[]' and ']' patterns, but cannot be matched together in a single [] block
+
+* <b>Directory</b>: 
+	* <i>Path</i>: The (absolute or relative) path of the target directory.
+	* <i>Destination</i>: The output path in which the directory and all of its contents (including sub-directories)
+		will be copied (preserving the original structure).
+		It is highly recommended that this path always starts with $(OUTPUT_DIR).
+
+* <b>Command</b>: 
+	* <i>Code</i>: A command string that will be passed to the system's shell interpreter for execution.
+	
+* <b>Script</b>:
+	* <i>Interpreter</i>: The (absolute or relative) path to the interpreter which will run the script.
+		It can also be just the name of the interpreter, if it can be found in the system $PATH.
+	* <i>Name</i>: [Optional, Recommended] Name of the script, which is searched in the <ScriptPath> paths.
+	* <i>Path</i>: [Optional, Required if <Name> is not specified] The (absolute or relative) path to the script file.
+	* <i>Arguments</i>: A list of whitespace-separated values that will be passed as arguments
+		when executing the script through the given interpreter.
+
+* <b>Restrict</b>: 
+	* <i>Architecture</i>: [Optional] Express a condition on the target architecture.
+		Possible values for this field are { x86, x64/amd64, any/all/* } or a combination of
+		these using the logical OR operator '|'. The flag names are case insensitive.
+		If not specified, the default value of the filter will be 'any'.
+	* <i>Platform</i>: [Optional] Express a condition on the target operating system.
+		Possible values for this field are { win/windows, mac/macos, linux, any/all/* } or a combination of
+		these using the logical OR operator '|'. The flag names are case insensitive.
+		If not specified, the default value of the filter will be 'any'.
+	* <i>Configuration</i>: [Optional] Express a condition on the build configuration.
+		Possible values for this field are { debug/dbg, release/rel, any/all/* } or a combination of
+		these using the logical OR operator '|'. The flag names are case insensitive.
+		If not specified, the default value of the filter will be 'any'.
+	* <i>VARIABLE_NAME</i>: [Optional, Multiple] Express a condition on the value of a user-defined variable.
+		The condition is satisfied if the value of VARIABLE_NAME equals (using '==') the value provided
+		via the command line when running Hansel (if no matching variable is defined, parsing error).
+		The variable names are case insensitive.
+	* The contents of a <Restrict> node are parsed if (and only if) ALL of the conditions are satisfied.
+	
+## Variable placeholders and substitution rules
+
+All XML attributes (except version numbers and Architecture/Platform/Configuration attributes of a restrict node)
+may contain environment variable placeholders such as $(VARIABLE_NAME). This placeholders are substituted 
+by Hansel before parsing the document, with the values of variables (with the same name, case insensitive) defined
+in the command line. If a variable placeholder doesn't have a corresponding value defined, a parsing error is thrown.
