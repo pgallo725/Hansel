@@ -45,6 +45,9 @@ namespace Hansel
     {
         Settings settings;
 
+        if (argc < 2)
+            throw std::exception("Insufficient number of parameters");
+
         int index = 1;
 
         //! Execution mode specifier

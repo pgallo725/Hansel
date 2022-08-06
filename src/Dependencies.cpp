@@ -164,7 +164,7 @@ std::vector<Hansel::Dependency*> Hansel::CommandDependency::GetAllDependencies()
 bool Hansel::CommandDependency::Realize() const
 {
 	// Print command execution trace statements in verbose mode
-	Logger::TraceVerbose("Executing command >{}", code);
+	Logger::TraceVerbose("Executing command > {}", code);
 	
 	// An explicit flush of std::cout is necessary before a call to std::system,
 	//  if the spawned process performs any screen I/O. 

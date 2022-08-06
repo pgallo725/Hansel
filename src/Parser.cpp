@@ -139,7 +139,7 @@ namespace Hansel
             for (size_t i = 0; i < project_root_paths.size(); i++)
             {
                 project_root_paths[i] = Utilities::TrimString(project_root_paths[i]);
-                if (project_root_paths[i].starts_with('.'))
+                if (Utilities::IsRelativePath(project_root_paths[i]))
                     project_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), project_root_paths[i]);
             }
         }
@@ -153,7 +153,7 @@ namespace Hansel
             for (size_t i = 0; i < library_root_paths.size(); i++)
             {
                 library_root_paths[i] = Utilities::TrimString(library_root_paths[i]);
-                if (library_root_paths[i].starts_with('.'))
+                if (Utilities::IsRelativePath(library_root_paths[i]))
                     library_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), library_root_paths[i]);
             }
         }
@@ -167,7 +167,7 @@ namespace Hansel
             for (size_t i = 0; i < script_root_paths.size(); i++)
             {
                 script_root_paths[i] = Utilities::TrimString(script_root_paths[i]);
-                if (script_root_paths[i].starts_with('.'))
+                if (Utilities::IsRelativePath(script_root_paths[i]))
                     script_root_paths[i] = Utilities::CombinePath(settings.GetTargetDirectoryPath(), script_root_paths[i]);
             }
         }
@@ -424,11 +424,18 @@ namespace Hansel
             ? name.value()
             : std::filesystem::path(path.value()).filename().string();
 
+        // Resolve interpreter path by appending it to the breadcrumb directory (if relative)
+        Path interpreter_path;
+        if (Utilities::IsRelativePath(interpreter.value()))
+        {
+            interpreter_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), interpreter.value());
+        }
+
         // Resolve script path using the Path attribute (if specified) or the value of the Name attribute
         Path script_path;
         if (path.has_value())
         {
-            script_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), path.value());
+            script_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
         }
         else
         {
@@ -442,7 +449,7 @@ namespace Hansel
         return new ScriptDependency
         (
             settings.target,
-            interpreter.value(),
+            interpreter_path,
             name.value_or(filename),
             script_path,
             arguments.value()

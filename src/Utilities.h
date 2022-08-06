@@ -75,6 +75,22 @@ namespace Hansel
         }
 
 
+        /* Checks if a path has the characteristics of a relative path. */
+        static bool IsRelativePath(const Path& path)
+        {
+            try
+            {
+                const std::filesystem::path std_path(path);
+                if (std_path.empty())
+                    return false;
+                return std_path.is_relative();
+            }
+            catch (std::exception)
+            {
+                return false;
+            }
+        }
+
         /* Returns a path obtained by concatenating the provided paths with a '/',
             after trimming them and removing additional '/' or '\' characters. 
            The resulting path is normalized according to std::path::lexically_normal(). */
