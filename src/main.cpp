@@ -18,20 +18,26 @@ using namespace Hansel;
     folder, running additional scripts (if specified), trying to
     automatically resolve paths and potential library conflicts.
 
-    2) hansel.exe --check <path-to-breadcrumb> <install-dir> <platform-specifier> [--env <variables>] [-v,--verbose]
+    2) hansel.exe --debug <path-to-breadcrumb> <install-dir> <platform-specifier> [--env <variables>] [-v,--verbose]
+
+    In debug mode, Hansel will 'simulate' the --install mode execution,
+    printing all the operations that it would normally perform, to let
+    the user observe its behaviour, without actually modifying the filesystem.
+
+    3) hansel.exe --check <path-to-breadcrumb> <install-dir> <platform-specifier> [--env <variables>] [-v,--verbose]
 
     When launched with the 'check' option, Hansel does not perform any
     build step but is able to analyze the dependency tree of the target
     and detect any error of missing library folders, conflicts between
     library versions, wrong paths and so on...
 
-    3) hansel.exe --list <path-to-breadcrumb> <platform-specifier> [--env <variables>] [-v,--verbose]
+    4) hansel.exe --list <path-to-breadcrumb> <platform-specifier> [--env <variables>] [-v,--verbose]
 
     In 'list' mode, Hansel traverses the dependency tree of the specified
     target and prints it in a clear and understandable format in the
     output console.
 
-    4) hansel.exe --help
+    5) hansel.exe --help
 
     Additionally, the 'help' command prints the instructions for using 
     the application and all the available command line options.
@@ -40,6 +46,7 @@ using namespace Hansel;
 
 void ShowHelp();
 void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
+void DebugRealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 
@@ -94,6 +101,12 @@ int main(int argc, char* argv[])
             break;
         }
 
+        case Settings::Mode::Debug:
+        {
+            DebugRealizeDependencies(dependencies, settings);
+            break;
+        }
+
         case Settings::Mode::Check:
         {
             CheckDependencies(dependencies, settings);
@@ -121,6 +134,7 @@ void ShowHelp()
 {
     std::printf("\nUsage:  Hansel --help"
                 "\n        Hansel --install <path-to-breadcrumb> <install-dir> <platform> [-e <variables>] [-v]"
+                "\n        Hansel --debug <path-to-breadcrumb> <install-dir> <platform> [-e <variables>] [-v]"
                 "\n        Hansel --check <path-to-breadcrumb> <install-dir> <platform> [-e <variables>] [-v]"
                 "\n        Hansel --list <path-to-breadcrumb> <platform> [-e <variables>] [-v]"
                 "\n"
@@ -128,6 +142,7 @@ void ShowHelp()
                 "\n"
                 "\n  -h / --help             Shows this help message"
                 "\n  -i / --install          Realize (copy / execute) all dependencies of the target breadcrumb"
+                "\n  -d / --debug            Simulate --install mode and print all actions that would be performed"
                 "\n  -c / --check            Analyze the dependency tree and detect issues such as library or file conflicts"
                 "\n  -l / --list             Visualize the entire depedency tree of the target breadcrumb"
                 "\n"
@@ -158,6 +173,22 @@ void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Set
     {
         for (size_t i = 0; i < dependencies.size(); i++)
             dependencies[i]->Realize();
+    }
+    else
+    {
+        std::printf("\n  NO DEPENDENCIES\n");
+    }
+}
+
+void DebugRealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
+{
+    std::printf("\nCopying dependencies of %s to '%s'...\n\n",
+        settings.GetTargetBreadcrumbFilename().c_str(), settings.output.c_str());
+
+    if (dependencies.size() > 0)
+    {
+        for (size_t i = 0; i < dependencies.size(); i++)
+            dependencies[i]->DebugRealize();
     }
     else
     {

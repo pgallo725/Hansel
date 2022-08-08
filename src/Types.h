@@ -122,6 +122,7 @@ namespace Hansel
         {
             Help,
             Install,
+            Debug,
             Check,
             List
         };

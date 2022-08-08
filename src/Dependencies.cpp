@@ -24,6 +24,16 @@ static void Print_Internal(const std::string& prefix, const std::string& type, c
 	}
 }
 
+static void IndentPrint(std::size_t indent, const std::string& text)
+{
+	if (indent > 0)
+	{
+		const std::string whitespaces = std::string(indent, ' ');
+		std::printf("%s", whitespaces.c_str());
+	}
+	std::printf("> %s\n", text.c_str());
+}
+
 
 std::vector<Hansel::Dependency*> Hansel::ProjectDependency::GetAllDependencies() const
 {
@@ -44,6 +54,19 @@ bool Hansel::ProjectDependency::Realize() const
 	for (const Dependency* dependency : dependencies)
 	{
 		if (!dependency->Realize())
+			result = false;
+	}
+	return result;
+}
+
+bool Hansel::ProjectDependency::DebugRealize(size_t indent) const
+{
+	IndentPrint(indent, "PROJECT: '" + name + "'");
+
+	bool result = true;
+	for (const Dependency* dependency : dependencies)
+	{
+		if (!dependency->DebugRealize(indent + 2))
 			result = false;
 	}
 	return result;
@@ -79,6 +102,20 @@ bool Hansel::LibraryDependency::Realize() const
 	return result;
 }
 
+bool Hansel::LibraryDependency::DebugRealize(size_t indent) const
+{
+	const std::string name_version_str = name + " " + version.ToString();
+	IndentPrint(indent, "LIBRARY: '" + name_version_str + "'");
+
+	bool result = true;
+	for (const Dependency* dependency : dependencies)
+	{
+		if (!dependency->DebugRealize(indent + 2))
+			result = false;
+	}
+	return result;
+}
+
 void Hansel::LibraryDependency::Print(const std::string& prefix) const
 {
 	const std::string name_version_str = name + " " + version.ToString();
@@ -100,6 +137,16 @@ bool Hansel::FileDependency::Realize() const
 		Logger::Error(err.message());
 		return false;
 	}
+	return true;
+}
+
+bool Hansel::FileDependency::DebugRealize(size_t indent) const
+{
+	// Construct the destination file path
+	const std::string filename = std::filesystem::path(path).filename().string();
+	const Path file_destination = Utilities::CombinePath(destination, filename);
+
+	IndentPrint(indent, "COPY FILE '" + path + "' ==> '" + file_destination + "'");
 	return true;
 }
 
@@ -126,6 +173,23 @@ bool Hansel::FilesDependency::Realize() const
 	return true;
 }
 
+bool Hansel::FilesDependency::DebugRealize(size_t indent) const
+{
+	const Hansel::Path from_directory = std::filesystem::path(path).parent_path().string();
+
+	const std::vector<Path> files = Utilities::GlobFiles(path);
+	for (const auto file_path : files)
+	{
+		// Construct the destination file path
+		Path file_subpath = file_path;
+		file_subpath.erase(size_t(0), from_directory.size());
+		const Path file_destination = Utilities::CombinePath(destination, file_subpath);
+
+		IndentPrint(indent, "COPY FILE '" + file_path + "' ==> '" + file_destination + "'");
+	}
+	return true;
+}
+
 void Hansel::FilesDependency::Print(const std::string& prefix) const
 {
 	Print_Internal(prefix, "FILES", path, nullptr);
@@ -146,6 +210,12 @@ bool Hansel::DirectoryDependency::Realize() const
 		Logger::Error(err.message());
 		return false;
 	}
+	return true;
+}
+
+bool Hansel::DirectoryDependency::DebugRealize(size_t indent) const
+{
+	IndentPrint(indent, "COPY DIRECTORY '" + path + "' ==> '" + destination + "'");
 	return true;
 }
 
@@ -178,6 +248,12 @@ bool Hansel::CommandDependency::Realize() const
 	return true;
 }
 
+bool Hansel::CommandDependency::DebugRealize(size_t indent) const
+{
+	IndentPrint(indent, "EXECUTE COMMAND '" + code + "'");
+	return true;
+}
+
 void Hansel::CommandDependency::Print(const std::string& prefix) const
 {
 	Print_Internal(prefix, "COMMAND", code, nullptr);
@@ -205,6 +281,12 @@ bool Hansel::ScriptDependency::Realize() const
 
 	const std::string& script_cmd = interpreter + " \"" + path + "\" " + arguments;
 	std::system(script_cmd.c_str());
+	return true;
+}
+
+bool Hansel::ScriptDependency::DebugRealize(size_t indent) const
+{
+	IndentPrint(indent, "EXECUTE SCRIPT '" + path + (arguments.empty() ? "'" : "' WITH ARGS: '" + arguments + "'"));
 	return true;
 }
 

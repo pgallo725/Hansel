@@ -26,6 +26,7 @@ namespace Hansel
         virtual std::vector<Dependency*> GetAllDependencies() const = 0;
 
         virtual bool Realize() const = 0;
+        virtual bool DebugRealize(size_t indent = 0) const = 0;
         virtual void Print(const std::string& prefix) const = 0;
 
     protected:
@@ -62,6 +63,7 @@ namespace Hansel
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize() const override;
+        bool DebugRealize(size_t indent = 0) const override;
         void Print(const std::string& prefix) const override;
     };
 
@@ -90,6 +92,7 @@ namespace Hansel
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize() const override;
+        bool DebugRealize(size_t indent = 0) const override;
         void Print(const std::string& prefix) const override;
     };
 
@@ -113,6 +116,7 @@ namespace Hansel
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize() const override;
+        bool DebugRealize(size_t indent = 0) const override;
         void Print(const std::string& prefix) const override;
     };
 
@@ -136,6 +140,7 @@ namespace Hansel
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize() const override;
+        bool DebugRealize(size_t indent = 0) const override;
         void Print(const std::string& prefix) const override;
     };
 
@@ -159,6 +164,7 @@ namespace Hansel
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize() const override;
+        bool DebugRealize(size_t indent = 0) const override;
         void Print(const std::string& prefix) const override;
     };
 
@@ -181,6 +187,7 @@ namespace Hansel
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize() const override;
+        bool DebugRealize(size_t indent = 0) const override;
         void Print(const std::string& prefix) const override;
     };
 
@@ -207,6 +214,7 @@ namespace Hansel
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize() const override;
+        bool DebugRealize(size_t indent = 0) const override;
         void Print(const std::string& prefix) const override;
     };
 }
