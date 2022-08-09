@@ -274,8 +274,15 @@ bool Hansel::ScriptDependency::Realize() const
 	if (!std::system(nullptr))
 		return false;
 
-	const std::string& script_cmd = interpreter + " \"" + path + "\" " + arguments;
-	std::system(script_cmd.c_str());
+	// Build the command line string for executing the script
+	std::stringstream script_command_line;
+	if (!interpreter.empty())
+		script_command_line << interpreter << ' ';
+	script_command_line << '"' << path << '"';
+	if (!arguments.empty())
+		script_command_line << ' ' << arguments;
+	
+	std::system(script_command_line.str().c_str());
 	return true;
 }
 

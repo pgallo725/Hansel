@@ -406,8 +406,6 @@ namespace Hansel
         const Settings& settings, const std::vector<std::string>& script_root_paths)
     {
         const std::optional<std::string> interpreter = GetAttributeAsSubstitutedString(script_element, "Interpreter", settings.variables);
-        if (!interpreter.has_value())
-            throw std::exception("Invalid <Script> node (missing 'Interpreter' attribute)");
 
         const std::optional<std::string> name = GetAttributeAsSubstitutedString(script_element, "Name", settings.variables);
 
@@ -425,8 +423,8 @@ namespace Hansel
             : std::filesystem::path(path.value()).filename().string();
 
         // Resolve interpreter path by appending it to the breadcrumb directory (if relative)
-        Path interpreter_path;
-        if (Utilities::IsRelativePath(interpreter.value()))
+        std::optional<Path> interpreter_path;
+        if (interpreter.has_value() && Utilities::IsRelativePath(interpreter.value()))
         {
             interpreter_path = Utilities::CombinePath(settings.GetTargetDirectoryPath(), interpreter.value());
         }
@@ -449,7 +447,7 @@ namespace Hansel
         return new ScriptDependency
         (
             settings.target,
-            interpreter_path,
+            interpreter_path.value_or(Path{}),
             name.value_or(filename),
             script_path,
             arguments.value()

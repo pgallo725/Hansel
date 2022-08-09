@@ -77,8 +77,9 @@ These elements and their attributes, along with their usage rules, are described
 	* <i>Code</i>: A command string that will be passed to the system's shell interpreter for execution.
 	
 * <b>Script</b>:
-	* <i>Interpreter</i>: The (absolute or relative) path to the interpreter which will run the script.
+	* <i>Interpreter</i>: [Optional] The (absolute or relative) path to the interpreter which will run the script.
 		It can also be just the name of the interpreter, if it can be found in the system $PATH.
+		If not specified, the shell command interpreter is used (e.g. for *.bat scripts on Windows).
 	* <i>Name</i>: [Optional, Recommended] Name of the script, which is searched in the <ScriptPath> paths.
 	* <i>Path</i>: [Optional, Required if <Name> is not specified] The (absolute or relative) path to the script file.
 	* <i>Arguments</i>: A list of whitespace-separated values that will be passed as arguments
