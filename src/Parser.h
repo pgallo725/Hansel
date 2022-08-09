@@ -41,6 +41,9 @@ namespace Hansel
         static void ProcessChildrenRestrictNodes(tinyxml2::XMLNode* root, const Settings& settings);
         static bool EvaluateRestrictNode(const tinyxml2::XMLElement* restrict_element, const Settings& settings);
 
+        // Validity checks for attribute strings
+        static bool CheckDestinationAttribute(const tinyxml2::XMLElement* element);
+
         // XML attributes parsing
         static std::optional<String>    GetAttributeAsRawString(const tinyxml2::XMLElement* element, const char* attribute);
         static std::optional<String>    GetAttributeAsSubstitutedString(const tinyxml2::XMLElement* element, const char* attribute, const Environment& environment);

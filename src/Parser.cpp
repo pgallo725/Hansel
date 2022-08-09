@@ -237,6 +237,9 @@ namespace Hansel
         if (!destination.has_value())
             throw std::exception("Invalid <Project> node (missing 'Destination' attribute)");
 
+        if (!CheckDestinationAttribute(project_element))
+            throw std::exception("Invalid <Project> node (the 'Destination' attribute value must always begin with '$(OUTPUT_DIR)')");
+
         // Resolve project directory using the Path attribute (if specified) or the value of the Name attribute
         Path project_directory_path;
         if (path.has_value())
@@ -289,6 +292,9 @@ namespace Hansel
         if (!destination.has_value())
             throw std::exception("Invalid <Library> node (missing 'Destination' attribute)");
 
+        if (!CheckDestinationAttribute(library_element))
+            throw std::exception("Invalid <Library> node (the 'Destination' attribute value must always begin with '$(OUTPUT_DIR)')");
+
         // Resolve library directory using the Path attribute (if specified) or the values of the Name/Version attributes
         Path library_directory_path;
         if (path.has_value())
@@ -336,6 +342,9 @@ namespace Hansel
         if (!destination.has_value())
             throw std::exception("Invalid <File> node (missing 'Destination' attribute)");
 
+        if (!CheckDestinationAttribute(file_element))
+            throw std::exception("Invalid <File> node (the 'Destination' attribute value must always begin with '$(OUTPUT_DIR)')");
+
         // Extract the "full" path to the dependency file
         const Path complete_file_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
 
@@ -358,6 +367,9 @@ namespace Hansel
         if (!destination.has_value())
             throw std::exception("Invalid <Files> node (missing 'Destination' attribute)");
 
+        if (!CheckDestinationAttribute(files_element))
+            throw std::exception("Invalid <Files> node (the 'Destination' attribute value must always begin with '$(OUTPUT_DIR)')");
+
         // Extract the "full" path to the dependency files
         const Path complete_files_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
 
@@ -379,6 +391,9 @@ namespace Hansel
         const std::optional<Path> destination = GetAttributeAsPath(directory_element, "Destination", settings.variables);
         if (!destination.has_value())
             throw std::exception("Invalid <Directory> node (missing 'Destination' attribute)");
+
+        if (!CheckDestinationAttribute(directory_element))
+            throw std::exception("Invalid <Directory> node (the 'Destination' attribute value must always begin with '$(OUTPUT_DIR)')");
 
         // Extract the "full" path to the dependency directory
         const Path complete_directory_path = Utilities::MakeAbsolutePath(path.value(), settings.GetTargetDirectoryPath());
@@ -632,6 +647,19 @@ namespace Hansel
             }
         }
 
+        return true;
+    }
+
+
+    bool Parser::CheckDestinationAttribute(const tinyxml2::XMLElement* element)
+    {
+        const std::optional<std::string> attribute_string = GetAttributeAsRawString(element, "Destination");
+        if (!attribute_string.has_value())
+            return false;
+
+        const std::string destination_str = Utilities::TrimString(attribute_string.value());
+        if (!Utilities::UpperString(destination_str).starts_with("$(OUTPUT_DIR)"))
+            return false;
         return true;
     }
 

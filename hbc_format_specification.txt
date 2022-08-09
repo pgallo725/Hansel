@@ -36,7 +36,7 @@ These elements and their attributes, along with their usage rules, are described
 	* <i>Path</i>: [Optional, Required if <Name> is not specified] The (absolute or relative) path 
 		of the folder containing the project's breadcrumb file.
 	* <i>Destination</i>: The output path in which the project's dependencies will be copied.
-		It is highly recommended that this path always starts with $(OUTPUT_DIR).
+		It is required that this path always starts with '$(OUTPUT_DIR)'.
 
 * <b>Library</b>: 
 	* <i>Name</i>: [Optional, Recommended] Name of the library, which is used to look for
@@ -46,17 +46,17 @@ These elements and their attributes, along with their usage rules, are described
 	* <i>Path</i>: [Optional, Required if <Name> and <Version> are not specified] The (absolute or relative) 
 		path of the folder containing the library's breadcrumb file.
 	* <i>Destination</i>: The output path in which the all dependencies of the library will be copied.
-		It is highly recommended that this path always starts with $(OUTPUT_DIR).
+		It is required that this path always starts with '$(OUTPUT_DIR)'.
 
 * <b>File</b>: 
 	* <i>Path</i>: The (absolute or relative) path of the target file.
 	* <i>Destination</i>: The output path in which the files will be copied (preserving the original filename).
-		It is highly recommended that this path always starts with $(OUTPUT_DIR).
+		It is required that this path always starts with '$(OUTPUT_DIR)'.
 
 * <b>Files</b>: 
 	* <i>Path</i>: A (absolute or relative) UNIX-like globbing pattern that matches one or more files.
 	* <i>Destination</i>: The output path in which all files matching the given pattern will be copied.
-		It is highly recommended that this path always starts with $(OUTPUT_DIR).
+		It is required that this path always starts with '$(OUTPUT_DIR)'.
 	* Rules for pattern matching (using https://github.com/p-ranav/glob)
 		- Pattern allowed only in the 'filename' component of the path
 		- * matches everything (if followed by something else, it matches everything up to that pattern, if the other pattern is not satisfied = no match)
@@ -71,7 +71,7 @@ These elements and their attributes, along with their usage rules, are described
 	* <i>Path</i>: The (absolute or relative) path of the target directory.
 	* <i>Destination</i>: The output path in which the directory and all of its contents (including sub-directories)
 		will be copied (preserving the original structure).
-		It is highly recommended that this path always starts with $(OUTPUT_DIR).
+		It is required that this path always starts with '$(OUTPUT_DIR)'.
 
 * <b>Command</b>: 
 	* <i>Code</i>: A command string that will be passed to the system's shell interpreter for execution.
