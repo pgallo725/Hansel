@@ -175,15 +175,10 @@ bool Hansel::FilesDependency::Realize() const
 
 bool Hansel::FilesDependency::DebugRealize(size_t indent) const
 {
-	const Hansel::Path from_directory = std::filesystem::path(path).parent_path().string();
-
 	const std::vector<Path> files = Utilities::GlobFiles(path);
 	for (const auto file_path : files)
 	{
-		// Construct the destination file path
-		Path file_subpath = file_path;
-		file_subpath.erase(size_t(0), from_directory.size());
-		const Path file_destination = Utilities::CombinePath(destination, file_subpath);
+		const Path file_destination = Utilities::GetDestinationPath(destination, file_path);
 
 		IndentPrint(indent, "COPY FILE '" + file_path + "' ==> '" + file_destination + "'");
 	}

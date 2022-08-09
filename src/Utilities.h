@@ -140,6 +140,19 @@ namespace Hansel
                 CombinePath(root, path);
         }
 
+        /* Construct the destination path of a file by combining the destination
+            directory path with the last part of the source file path (which could be
+            just the filename or a sub-path relative to <source_dir>).
+           If <source_dir> is not specified, the parent directory of <source_file> is used. */
+        static Path GetDestinationPath(const Path& dest_dir, const Path& source_file, const std::optional<Path> source_dir = {})
+        {
+            const Path from_directory = source_dir.has_value() ? 
+                source_dir.value() : std::filesystem::path(source_file).parent_path().string();
+            const Path file_subpath = Hansel::Path(source_file.begin() + from_directory.size(), source_file.end());
+            
+            return Utilities::CombinePath(dest_dir, file_subpath);
+        }
+
 
         /* Returns a flattened list of all absolute file paths contained in the provided 
             directory and all its sub-directories. */

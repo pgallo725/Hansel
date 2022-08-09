@@ -111,9 +111,7 @@ bool Hansel::DependencyChecker::CheckFileOverwrites(const Hansel::String& depend
 		{
 			const auto* file = dynamic_cast<const Hansel::FileDependency*>(dependency);
 
-			// Construct the destination file path
-			Hansel::Path file_destination = Utilities::CombinePath(file->destination,
-				std::filesystem::path(file->path).filename().string());
+			const Hansel::Path file_destination = Utilities::GetDestinationPath(file->destination, file->path);
 
 			if (files_copied.contains(file_destination))
 			{
@@ -136,15 +134,10 @@ bool Hansel::DependencyChecker::CheckFileOverwrites(const Hansel::String& depend
 		{
 			const auto* files = dynamic_cast<const Hansel::FilesDependency*>(dependency);
 
-			const Hansel::Path from_directory = std::filesystem::path(files->path).parent_path().string();
-
-			std::vector<Hansel::Path> glob_files = Utilities::GlobFiles(files->path);
+			const std::vector<Hansel::Path> glob_files = Utilities::GlobFiles(files->path);
 			for (const auto& file_path : glob_files)
 			{
-				// Construct the destination file path
-				Hansel::Path file_subpath = file_path;
-				file_subpath.erase(size_t(0), from_directory.size());
-				Hansel::Path file_destination = Utilities::CombinePath(files->destination, file_subpath);
+				const Hansel::Path file_destination = Utilities::GetDestinationPath(files->destination, file_path);
 
 				if (files_copied.contains(file_destination))
 				{
@@ -168,13 +161,11 @@ bool Hansel::DependencyChecker::CheckFileOverwrites(const Hansel::String& depend
 		{
 			const auto* directory = dynamic_cast<const Hansel::DirectoryDependency*>(dependency);
 
-			std::vector<Hansel::Path> directory_files = Utilities::GetAllFilesInDirectory(directory->path);
+			const std::vector<Hansel::Path> directory_files = Utilities::GetAllFilesInDirectory(directory->path);
 			for (const auto& file_path : directory_files)
 			{
-				// Construct the destination file path
-				Hansel::Path file_subpath = file_path;
-				file_subpath.erase(size_t(0), directory->path.size());
-				Hansel::Path file_destination = Utilities::CombinePath(directory->destination, file_subpath);
+				const Hansel::Path file_destination = Utilities::GetDestinationPath(
+					directory->destination, file_path, directory->path);
 
 				if (files_copied.contains(file_destination))
 				{
