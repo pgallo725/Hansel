@@ -45,7 +45,7 @@ using namespace Hansel;
 
 
 void ShowHelp();
-void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
+bool RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
         ShowHelp();
 
-        return -1;
+        return EXIT_FAILURE;
     }
 
     std::vector<Dependency*> dependencies;
@@ -82,34 +82,38 @@ int main(int argc, char* argv[])
         {
             Logger::Error("{}", e.what());
 
-            return -1;
+            return EXIT_FAILURE;
         }
     }
 
+    bool success;
     switch (settings.mode)
     {
         case Settings::Mode::Help:
         {
             ShowHelp();
+            success = true;
             break;
         }
 
         case Settings::Mode::Install: [[fallthrough]];
         case Settings::Mode::Debug:
         {
-            RealizeDependencies(dependencies, settings);
+            success = RealizeDependencies(dependencies, settings);
             break;
         }
 
         case Settings::Mode::Check:
         {
             CheckDependencies(dependencies, settings);
+            success = true;
             break;
         }
 
         case Settings::Mode::List:
         {
             PrintDependencies(dependencies, settings);
+            success = true;
             break;
         }
 
@@ -119,7 +123,7 @@ int main(int argc, char* argv[])
 
     std::printf("\n");
 
-    return 0;
+    return success ? EXIT_SUCCESS : EXIT_FAILURE;
 }
 
 
@@ -158,20 +162,25 @@ void ShowHelp()
     );
 }
 
-void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
+bool RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
 {
     std::printf("\nCopying dependencies of %s to '%s'...\n", 
         settings.GetTargetBreadcrumbFilename().c_str(), settings.output.c_str());
 
+    bool result = true;
     if (dependencies.size() > 0)
     {
         for (size_t i = 0; i < dependencies.size(); i++)
-            dependencies[i]->Realize(settings.mode == Settings::Mode::Debug, settings.verbose);
+        {
+            if (!dependencies[i]->Realize(settings.mode == Settings::Mode::Debug, settings.verbose))
+                result = false;
+        }
     }
     else
     {
         std::printf("\n  NO DEPENDENCIES\n");
     }
+    return result;
 }
 
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
