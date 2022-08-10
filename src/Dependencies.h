@@ -23,6 +23,7 @@ namespace Hansel
         Type GetType() const { return type; }
         Path GetParentBreadcrumbPath() const { return parent_breadcrumb_path; }
 
+        virtual std::vector<Dependency*> GetDirectDependencies() const = 0;
         virtual std::vector<Dependency*> GetAllDependencies() const = 0;
 
         virtual bool Realize(bool debug = false, bool verbose = false) const = 0;
@@ -59,6 +60,7 @@ namespace Hansel
             , name(name), path(path), destination(destination), dependencies(dependencies)
         {};
 
+        std::vector<Dependency*> GetDirectDependencies() const override;
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize(bool debug = false, bool verbose = false) const override;
@@ -87,6 +89,7 @@ namespace Hansel
             , name(name), version(version), path(path), destination(destination), dependencies(dependencies)
         {};
 
+        std::vector<Dependency*> GetDirectDependencies() const override;
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize(bool debug = false, bool verbose = false) const override;
@@ -110,6 +113,7 @@ namespace Hansel
             , path(path), destination(destination)
         {};
 
+        std::vector<Dependency*> GetDirectDependencies() const override;
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize(bool debug = false, bool verbose = false) const override;
@@ -133,6 +137,7 @@ namespace Hansel
             , path(path), destination(destination)
         {};
 
+        std::vector<Dependency*> GetDirectDependencies() const override;
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize(bool debug = false, bool verbose = false) const override;
@@ -156,6 +161,7 @@ namespace Hansel
             , path(path), destination(destination)
         {};
 
+        std::vector<Dependency*> GetDirectDependencies() const override;
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize(bool debug = false, bool verbose = false) const override;
@@ -178,6 +184,7 @@ namespace Hansel
             , code(code)
         {};
 
+        std::vector<Dependency*> GetDirectDependencies() const override;
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize(bool debug = false, bool verbose = false) const override;
@@ -204,6 +211,7 @@ namespace Hansel
             , interpreter(interpreter), name(name), path(path), arguments(arguments)
         {};
 
+        std::vector<Dependency*> GetDirectDependencies() const override;
         std::vector<Dependency*> GetAllDependencies() const override;
 
         bool Realize(bool debug = false, bool verbose = false) const override;

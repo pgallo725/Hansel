@@ -25,6 +25,11 @@ static void Print_Internal(const std::string& prefix, const std::string& type, c
 }
 
 
+std::vector<Hansel::Dependency*> Hansel::ProjectDependency::GetDirectDependencies() const
+{
+	return dependencies;
+}
+
 std::vector<Hansel::Dependency*> Hansel::ProjectDependency::GetAllDependencies() const
 {
 	// Initialize the array with the direct dependencies of this entry
@@ -73,6 +78,11 @@ void Hansel::ProjectDependency::Print(const std::string& prefix) const
 	Print_Internal(prefix, "PROJECT", name, &dependencies);
 }
 
+
+std::vector<Hansel::Dependency*> Hansel::LibraryDependency::GetDirectDependencies() const
+{
+	return dependencies;
+}
 
 std::vector<Hansel::Dependency*> Hansel::LibraryDependency::GetAllDependencies() const
 {
@@ -124,6 +134,12 @@ void Hansel::LibraryDependency::Print(const std::string& prefix) const
 }
 
 
+std::vector<Hansel::Dependency*> Hansel::FileDependency::GetDirectDependencies() const
+{
+	// No sub-dependencies
+	return {};
+}
+
 std::vector<Hansel::Dependency*> Hansel::FileDependency::GetAllDependencies() const
 {
 	// No sub-dependencies
@@ -155,6 +171,12 @@ void Hansel::FileDependency::Print(const std::string& prefix) const
 	Print_Internal(prefix, "FILE", path, nullptr);
 }
 
+
+std::vector<Hansel::Dependency*> Hansel::FilesDependency::GetDirectDependencies() const
+{
+	// No sub-dependencies
+	return {};
+}
 
 std::vector<Hansel::Dependency*> Hansel::FilesDependency::GetAllDependencies() const
 {
@@ -192,6 +214,12 @@ void Hansel::FilesDependency::Print(const std::string& prefix) const
 }
 
 
+std::vector<Hansel::Dependency*> Hansel::DirectoryDependency::GetDirectDependencies() const
+{
+	// No sub-dependencies
+	return {};
+}
+
 std::vector<Hansel::Dependency*> Hansel::DirectoryDependency::GetAllDependencies() const
 {
 	// No sub-dependencies
@@ -222,6 +250,12 @@ void Hansel::DirectoryDependency::Print(const std::string& prefix) const
 	Print_Internal(prefix, "DIRECTORY", path, nullptr);
 }
 
+
+std::vector<Hansel::Dependency*> Hansel::CommandDependency::GetDirectDependencies() const
+{
+	// No sub-dependencies
+	return {};
+}
 
 std::vector<Hansel::Dependency*> Hansel::CommandDependency::GetAllDependencies() const
 {
@@ -256,6 +290,12 @@ void Hansel::CommandDependency::Print(const std::string& prefix) const
 	Print_Internal(prefix, "COMMAND", code, nullptr);
 }
 
+
+std::vector<Hansel::Dependency*> Hansel::ScriptDependency::GetDirectDependencies() const
+{
+	// No sub-dependencies
+	return {};
+}
 
 std::vector<Hansel::Dependency*> Hansel::ScriptDependency::GetAllDependencies() const
 {
