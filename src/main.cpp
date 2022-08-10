@@ -46,7 +46,6 @@ using namespace Hansel;
 
 void ShowHelp();
 void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
-void DebugRealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 
@@ -95,15 +94,10 @@ int main(int argc, char* argv[])
             break;
         }
 
-        case Settings::Mode::Install:
-        {
-            RealizeDependencies(dependencies, settings);
-            break;
-        }
-
+        case Settings::Mode::Install: [[fallthrough]];
         case Settings::Mode::Debug:
         {
-            DebugRealizeDependencies(dependencies, settings);
+            RealizeDependencies(dependencies, settings);
             break;
         }
 
@@ -172,23 +166,7 @@ void RealizeDependencies(const std::vector<Dependency*>& dependencies, const Set
     if (dependencies.size() > 0)
     {
         for (size_t i = 0; i < dependencies.size(); i++)
-            dependencies[i]->Realize();
-    }
-    else
-    {
-        std::printf("\n  NO DEPENDENCIES\n");
-    }
-}
-
-void DebugRealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
-{
-    std::printf("\nCopying dependencies of %s to '%s'...\n\n",
-        settings.GetTargetBreadcrumbFilename().c_str(), settings.output.c_str());
-
-    if (dependencies.size() > 0)
-    {
-        for (size_t i = 0; i < dependencies.size(); i++)
-            dependencies[i]->DebugRealize();
+            dependencies[i]->Realize(settings.mode == Settings::Mode::Debug, settings.verbose);
     }
     else
     {

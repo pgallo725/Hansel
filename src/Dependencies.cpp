@@ -24,16 +24,6 @@ static void Print_Internal(const std::string& prefix, const std::string& type, c
 	}
 }
 
-static void IndentPrint(std::size_t indent, const std::string& text)
-{
-	if (indent > 0)
-	{
-		const std::string whitespaces = std::string(indent, ' ');
-		std::printf("%s", whitespaces.c_str());
-	}
-	std::printf("> %s\n", text.c_str());
-}
-
 
 std::vector<Hansel::Dependency*> Hansel::ProjectDependency::GetAllDependencies() const
 {
@@ -48,26 +38,32 @@ std::vector<Hansel::Dependency*> Hansel::ProjectDependency::GetAllDependencies()
 	return all_dependencies;
 }
 
-bool Hansel::ProjectDependency::Realize() const
+bool Hansel::ProjectDependency::Realize(bool debug, bool verbose) const
 {
 	bool result = true;
 	for (const Dependency* dependency : dependencies)
 	{
-		if (!dependency->Realize())
-			result = false;
+		// Realize sub-dependencies first
+		if (dependency->GetType() == Dependency::Type::Library ||
+			dependency->GetType() == Dependency::Type::Project)
+		{
+			if (!dependency->Realize(debug, verbose))
+				result = false;
+		}
 	}
-	return result;
-}
 
-bool Hansel::ProjectDependency::DebugRealize(size_t indent) const
-{
-	IndentPrint(indent, "PROJECT: '" + name + "'");
+	if (debug || verbose)
+		std::printf("**** PROJECT: %s\n", name.c_str());
 
-	bool result = true;
 	for (const Dependency* dependency : dependencies)
 	{
-		if (!dependency->DebugRealize(indent + 2))
-			result = false;
+		// Realize direct dependencies last
+		if (dependency->GetType() != Dependency::Type::Library &&
+			dependency->GetType() != Dependency::Type::Project)
+		{
+			if (!dependency->Realize(debug, verbose))
+				result = false;
+		}
 	}
 	return result;
 }
@@ -91,27 +87,32 @@ std::vector<Hansel::Dependency*> Hansel::LibraryDependency::GetAllDependencies()
 	return all_dependencies;
 }
 
-bool Hansel::LibraryDependency::Realize() const
+bool Hansel::LibraryDependency::Realize(bool debug, bool verbose) const
 {
 	bool result = true;
 	for (const Dependency* dependency : dependencies)
 	{
-		if (!dependency->Realize())
-			result = false;
+		// Realize sub-dependencies first
+		if (dependency->GetType() == Dependency::Type::Library ||
+			dependency->GetType() == Dependency::Type::Project)
+		{
+			if (!dependency->Realize(debug, verbose))
+				result = false;
+		}
 	}
-	return result;
-}
 
-bool Hansel::LibraryDependency::DebugRealize(size_t indent) const
-{
-	const std::string name_version_str = name + " " + version.ToString();
-	IndentPrint(indent, "LIBRARY: '" + name_version_str + "'");
+	if (debug || verbose)
+		std::printf("**** LIBRARY: %s %s\n", name.c_str(), version.ToString().c_str());
 
-	bool result = true;
 	for (const Dependency* dependency : dependencies)
 	{
-		if (!dependency->DebugRealize(indent + 2))
-			result = false;
+		// Realize direct dependencies last
+		if (dependency->GetType() != Dependency::Type::Library &&
+			dependency->GetType() != Dependency::Type::Project)
+		{
+			if (!dependency->Realize(debug, verbose))
+				result = false;
+		}
 	}
 	return result;
 }
@@ -129,24 +130,23 @@ std::vector<Hansel::Dependency*> Hansel::FileDependency::GetAllDependencies() co
 	return {};
 }
 
-bool Hansel::FileDependency::Realize() const
+bool Hansel::FileDependency::Realize(bool debug, bool verbose) const
 {
+	if (debug || verbose)
+	{
+		const Path file_destination = Utilities::GetDestinationPath(destination, path);
+		std::printf("Copy file '%s' ==> '%s'\n", path.c_str(), file_destination.c_str());
+
+		if (debug)	// in Debug mode, return without copying the file
+			return true;
+	}
+
 	const std::error_code err = Utilities::CopySingleFile(path, destination);
 	if (err.value() != 0)
 	{
 		Logger::Error(err.message());
 		return false;
 	}
-	return true;
-}
-
-bool Hansel::FileDependency::DebugRealize(size_t indent) const
-{
-	// Construct the destination file path
-	const std::string filename = std::filesystem::path(path).filename().string();
-	const Path file_destination = Utilities::CombinePath(destination, filename);
-
-	IndentPrint(indent, "COPY FILE '" + path + "' ==> '" + file_destination + "'");
 	return true;
 }
 
@@ -162,25 +162,26 @@ std::vector<Hansel::Dependency*> Hansel::FilesDependency::GetAllDependencies() c
 	return {};
 }
 
-bool Hansel::FilesDependency::Realize() const
+bool Hansel::FilesDependency::Realize(bool debug, bool verbose) const
 {
+	if (debug || verbose)
+	{
+		const std::vector<Path> files = Utilities::GlobFiles(path);
+		for (const auto file_path : files)
+		{
+			const Path file_destination = Utilities::GetDestinationPath(destination, file_path);
+			std::printf("Copy file '%s' ==> '%s'\n", file_path.c_str(), file_destination.c_str());
+		}
+
+		if (debug)	// in Debug mode, return without copying the files
+			return true;
+	}
+
 	const std::error_code err = Utilities::CopyMultipleFiles(path, destination);
 	if (err.value() != 0)
 	{
 		Logger::Error(err.message());
 		return false;
-	}
-	return true;
-}
-
-bool Hansel::FilesDependency::DebugRealize(size_t indent) const
-{
-	const std::vector<Path> files = Utilities::GlobFiles(path);
-	for (const auto file_path : files)
-	{
-		const Path file_destination = Utilities::GetDestinationPath(destination, file_path);
-
-		IndentPrint(indent, "COPY FILE '" + file_path + "' ==> '" + file_destination + "'");
 	}
 	return true;
 }
@@ -197,20 +198,22 @@ std::vector<Hansel::Dependency*> Hansel::DirectoryDependency::GetAllDependencies
 	return {};
 }
 
-bool Hansel::DirectoryDependency::Realize() const
+bool Hansel::DirectoryDependency::Realize(bool debug, bool verbose) const
 {
+	if (debug || verbose)
+	{
+		std::printf("Copy directory '%s' ==> '%s'\n", path.c_str(), destination.c_str());
+
+		if (debug)	// in Debug mode, return without copying the directory
+			return true;
+	}
+
 	const std::error_code err = Utilities::CopyDirectory(path, destination);
 	if (err.value() != 0)
 	{
 		Logger::Error(err.message());
 		return false;
 	}
-	return true;
-}
-
-bool Hansel::DirectoryDependency::DebugRealize(size_t indent) const
-{
-	IndentPrint(indent, "COPY DIRECTORY '" + path + "' ==> '" + destination + "'");
 	return true;
 }
 
@@ -226,26 +229,25 @@ std::vector<Hansel::Dependency*> Hansel::CommandDependency::GetAllDependencies()
 	return {};
 }
 
-bool Hansel::CommandDependency::Realize() const
+bool Hansel::CommandDependency::Realize(bool debug, bool verbose) const
 {
-	// Print command execution trace statements in verbose mode
-	Logger::TraceVerbose("Executing command > {}", code);
-	
-	// An explicit flush of std::cout is necessary before a call to std::system,
-	//  if the spawned process performs any screen I/O. 
-	std::cout.flush();
-
 	// Check the system command processor availability
 	if (!std::system(nullptr))
 		return false;
 
-	std::system(code.c_str());
-	return true;
-}
+	if (debug || verbose)
+	{
+		std::printf("Execute command '%s'\n", code.c_str());
 
-bool Hansel::CommandDependency::DebugRealize(size_t indent) const
-{
-	IndentPrint(indent, "EXECUTE COMMAND '" + code + "'");
+		if (debug)	// in Debug mode, return without executing the command
+			return true;
+	}
+
+	// An explicit flush of std::cout is necessary before a call to std::system,
+	//  if the spawned process performs any screen I/O. 
+	std::cout.flush();
+
+	std::system(code.c_str());
 	return true;
 }
 
@@ -261,18 +263,26 @@ std::vector<Hansel::Dependency*> Hansel::ScriptDependency::GetAllDependencies() 
 	return {};
 }
 
-bool Hansel::ScriptDependency::Realize() const
+bool Hansel::ScriptDependency::Realize(bool debug, bool verbose) const
 {
-	// Print script execution trace statements in verbose mode
-	Logger::TraceVerbose("Executing script: '{}'", path);
-	
-	// An explicit flush of std::cout is necessary before a call to std::system,
-	//  if the spawned process performs any screen I/O. 
-	std::cout.flush();
-
 	// Check the system command processor availability
 	if (!std::system(nullptr))
 		return false;
+
+	if (debug || verbose)
+	{
+		std::printf("Execute script '%s'", path.c_str());
+		if (!arguments.empty())
+			std::printf(" with args: '%s'\n", arguments.c_str());
+		else std::printf("\n");
+
+		if (debug)	// in Debug mode, return without executing the command
+			return true;
+	}
+
+	// An explicit flush of std::cout is necessary before a call to std::system,
+	//  if the spawned process performs any screen I/O. 
+	std::cout.flush();
 
 	// Build the command line string for executing the script
 	std::stringstream script_command_line;
@@ -283,12 +293,6 @@ bool Hansel::ScriptDependency::Realize() const
 		script_command_line << ' ' << arguments;
 	
 	std::system(script_command_line.str().c_str());
-	return true;
-}
-
-bool Hansel::ScriptDependency::DebugRealize(size_t indent) const
-{
-	IndentPrint(indent, "EXECUTE SCRIPT '" + path + (arguments.empty() ? "'" : "' WITH ARGS: '" + arguments + "'"));
 	return true;
 }
 
