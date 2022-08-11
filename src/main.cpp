@@ -45,9 +45,6 @@ using namespace Hansel;
 
 
 void ShowHelp();
-bool RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
-void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
-void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings);
 
 
 int main(int argc, char* argv[])
@@ -71,12 +68,13 @@ int main(int argc, char* argv[])
         return EXIT_FAILURE;
     }
 
-    std::vector<Dependency*> dependencies;
+    std::unique_ptr<RootDependency> root;
     if (settings.mode != Settings::Mode::Help)
     {
         try
         {
-            dependencies = Parser::ParseBreadcrumb(settings.target, settings);
+            std::vector<Dependency*> dependencies = Parser::ParseBreadcrumb(settings.target, settings);
+            root = std::make_unique<RootDependency>(settings.GetTargetBreadcrumbFilename(), settings.output, dependencies);
         }
         catch (std::exception e)
         {
@@ -99,20 +97,19 @@ int main(int argc, char* argv[])
         case Settings::Mode::Install: [[fallthrough]];
         case Settings::Mode::Debug:
         {
-            success = RealizeDependencies(dependencies, settings);
+            success = root->Realize(settings.mode == Settings::Mode::Debug, settings.verbose);
             break;
         }
 
         case Settings::Mode::Check:
         {
-            CheckDependencies(dependencies, settings);
-            success = true;
+            success = DependencyChecker::Check(root.get(), settings);
             break;
         }
 
         case Settings::Mode::List:
         {
-            PrintDependencies(dependencies, settings);
+            root->Print({});
             success = true;
             break;
         }
@@ -160,63 +157,4 @@ void ShowHelp()
                 "\n  -v / --verbose          Enable additional program outputs (verbose)"
                 "\n"
     );
-}
-
-bool RealizeDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
-{
-    std::printf("\nCopying dependencies of %s to '%s'...\n", 
-        settings.GetTargetBreadcrumbFilename().c_str(), settings.output.c_str());
-
-    bool result = true;
-    if (dependencies.size() > 0)
-    {
-        for (size_t i = 0; i < dependencies.size(); i++)
-        {
-            if (!dependencies[i]->Realize(settings.mode == Settings::Mode::Debug, settings.verbose))
-                result = false;
-        }
-    }
-    else
-    {
-        std::printf("\n  NO DEPENDENCIES\n");
-    }
-    return result;
-}
-
-void CheckDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
-{
-    std::printf("\nChecking dependencies of %s for potential conflicts...\n",
-        settings.GetTargetBreadcrumbFilename().c_str());
-
-    if (dependencies.size() > 0)
-    {
-        bool all_good = DependencyChecker::Check(dependencies, settings);
-        std::printf("...done! %s.\n", 
-            all_good ? "No issues detected" : "Some issues detected, read the logs for more details");
-    }
-    else
-    {
-        std::printf("\n  NO DEPENDENCIES\n");
-    }
-}
-
-void PrintDependencies(const std::vector<Dependency*>& dependencies, const Settings& settings)
-{
-    std::printf("\n%s\n", settings.GetTargetBreadcrumbFilename().c_str());
-
-    if (dependencies.size() > 0)
-    {
-        const std::string prefix = "  |";
-        for (size_t i = 0; i < dependencies.size(); i++)
-        {
-            std::printf(prefix.c_str());	//empty line for spacing
-            std::printf("\n");
-
-            dependencies[i]->Print(prefix);
-        }
-    }
-    else
-    {
-        std::printf("\n  NO DEPENDENCIES\n");
-    }
 }

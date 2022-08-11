@@ -11,6 +11,7 @@ namespace Hansel
 
         enum class Type
         {
+            Root,
             Project,
             Library,
             File,
@@ -37,6 +38,33 @@ namespace Hansel
 
         Type type;
         Path parent_breadcrumb_path;
+    };
+
+
+    class RootDependency : public Dependency
+    {
+        friend class DependencyChecker;
+
+    private:
+
+        String  breadcrumb_name;
+        Path    destination;
+
+        std::vector<Dependency*> dependencies;
+
+    public:
+
+        RootDependency(const String& breadcrumb_name, const Path& destination,
+            const std::vector<Dependency*>& dependencies)
+            : Dependency(Path{}, Type::Project)
+            , breadcrumb_name(breadcrumb_name), destination(destination), dependencies(dependencies)
+        {};
+
+        std::vector<Dependency*> GetDirectDependencies() const override;
+        std::vector<Dependency*> GetAllDependencies() const override;
+
+        bool Realize(bool debug = false, bool verbose = false) const override;
+        void Print(const std::string& prefix) const override;
     };
 
 

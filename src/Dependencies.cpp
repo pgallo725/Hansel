@@ -25,6 +25,86 @@ static void Print_Internal(const std::string& prefix, const std::string& type, c
 }
 
 
+std::vector<Hansel::Dependency*> Hansel::RootDependency::GetDirectDependencies() const
+{
+	return dependencies;
+}
+
+std::vector<Hansel::Dependency*> Hansel::RootDependency::GetAllDependencies() const
+{
+	// Initialize the array with the direct dependencies of the root
+	std::vector<Hansel::Dependency*> all_dependencies(dependencies);
+	for (const Dependency* dependency : dependencies)
+	{
+		// Get the indirect dependencies from each of the children and add them to the list
+		std::vector<Hansel::Dependency*> indirect_dependencies = dependency->GetAllDependencies();
+		all_dependencies.insert(all_dependencies.end(), indirect_dependencies.begin(), indirect_dependencies.end());
+	}
+	return all_dependencies;
+}
+
+bool Hansel::RootDependency::Realize(bool debug, bool verbose) const
+{
+	std::printf("\nCopying dependencies of %s to '%s'...\n",
+		breadcrumb_name.c_str(), destination.c_str());
+
+	bool result = true;
+	if (dependencies.size() > 0)
+	{
+		for (const Dependency* dependency : dependencies)
+		{
+			// Realize sub-dependencies first
+			if (dependency->GetType() == Dependency::Type::Library ||
+				dependency->GetType() == Dependency::Type::Project)
+			{
+				if (!dependency->Realize(debug, verbose))
+					result = false;
+			}
+		}
+
+		if (debug || verbose)
+			std::printf("**** ROOT: %s\n", breadcrumb_name.c_str());
+
+		for (const Dependency* dependency : dependencies)
+		{
+			// Realize direct dependencies last
+			if (dependency->GetType() != Dependency::Type::Library &&
+				dependency->GetType() != Dependency::Type::Project)
+			{
+				if (!dependency->Realize(debug, verbose))
+					result = false;
+			}
+		}
+	}
+	else
+	{
+		std::printf("\n  NO DEPENDENCIES\n");
+	}
+	return result;
+}
+
+void Hansel::RootDependency::Print(const std::string& prefix) const
+{
+	std::printf("\n[ROOT] %s\n", breadcrumb_name.c_str());
+
+	if (dependencies.size() > 0)
+	{
+		const std::string full_prefix = prefix + "  |";
+		for (size_t i = 0; i < dependencies.size(); i++)
+		{
+			std::printf(full_prefix.c_str());	//empty line for spacing
+			std::printf("\n");
+
+			dependencies[i]->Print(full_prefix);
+		}
+	}
+	else
+	{
+		std::printf("\n  NO DEPENDENCIES\n");
+	}
+}
+
+
 std::vector<Hansel::Dependency*> Hansel::ProjectDependency::GetDirectDependencies() const
 {
 	return dependencies;

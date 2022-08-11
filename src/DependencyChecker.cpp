@@ -5,17 +5,31 @@
 #include "Utilities.h"
 
 
-bool Hansel::DependencyChecker::Check(const std::vector<Hansel::Dependency*>& dependencies, const Hansel::Settings& settings)
+bool Hansel::DependencyChecker::Check(const Hansel::RootDependency* root, const Hansel::Settings& settings)
 {
-	// Check library dependencies for potential version conflicts
-	std::map<String, LibraryDependencyEntry, StringIgnoreCaseLess> libraries;
-	bool librariesOk = CheckLibraryVersions(settings.target, dependencies, libraries);
+	std::printf("\nChecking dependencies of %s for potential conflicts...\n",
+		root->breadcrumb_name.c_str());
 
-	// Check file dependencies for potential overwrite conflicts
-	std::map<Path, FileDependencyEntry, StringIgnoreCaseLess> files;
-	bool filesOk = CheckFileOverwrites(settings.target, dependencies, files);
+	if (root->dependencies.size() > 0)
+	{
+		// Check library dependencies for potential version conflicts
+		std::map<String, LibraryDependencyEntry, StringIgnoreCaseLess> libraries;
+		bool librariesOk = CheckLibraryVersions(settings.target, root->dependencies, libraries);
 
-	return librariesOk && filesOk;
+		// Check file dependencies for potential overwrite conflicts
+		std::map<Path, FileDependencyEntry, StringIgnoreCaseLess> files;
+		bool filesOk = CheckFileOverwrites(settings.target, root->dependencies, files);
+
+		std::printf("...done! %s.\n",
+			(librariesOk && filesOk) ? "No issues detected" : "Some issues detected, read the logs for more details");
+
+		return librariesOk && filesOk;
+	}
+	else
+	{
+		std::printf("\n  NO DEPENDENCIES\n");
+	}
+	return true;
 }
 
 

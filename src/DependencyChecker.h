@@ -8,7 +8,7 @@ namespace Hansel
 	{
 	public:
 
-		static bool Check(const std::vector<Dependency*>& dependencies, const Settings& settings);
+		static bool Check(const RootDependency* root, const Settings& settings);
 
 	private:
 
