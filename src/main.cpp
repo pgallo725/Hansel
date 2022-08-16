@@ -49,8 +49,6 @@ void ShowHelp();
 
 int main(int argc, char* argv[])
 {
-    Logger::Init();
-
     // Usage example:
     //  hansel.exe --list ./application.hbc win64d --env PLATFORM_DIR=win64d HW_ROOTDIR=./hw --verbose
 

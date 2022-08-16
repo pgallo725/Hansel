@@ -149,7 +149,6 @@
   <ItemGroup>
     <ClCompile Include="src\Dependencies.cpp" />
     <ClCompile Include="src\DependencyChecker.cpp" />
-    <ClCompile Include="src\Logger.cpp" />
     <ClCompile Include="src\main.cpp" />
     <ClCompile Include="src\Parser.cpp" />
     <ClCompile Include="src\SettingsParser.cpp" />

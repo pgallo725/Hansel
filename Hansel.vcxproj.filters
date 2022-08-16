@@ -29,9 +29,6 @@
     <ClCompile Include="src\Dependencies.cpp">
       <Filter>Source files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Logger.cpp">
-      <Filter>Source files</Filter>
-    </ClCompile>
     <ClCompile Include="vendor\tinyxml2\tinyxml2.cpp">
       <Filter>tinyxml2</Filter>
     </ClCompile>
